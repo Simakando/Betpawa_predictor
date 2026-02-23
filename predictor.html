@@ -1,0 +1,2892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SportyBet Virtual Football Predictor</title>
+<style>
+  :root {
+    --primary: #c8102e;
+    --primary-dark: #8b0000;
+    --secondary: #1a1a2e;
+    --accent: #00c851;
+    --warn: #ff6b35;
+    --gold: #ffd700;
+    --bg: #0d0d1a;
+    --card: #16213e;
+    --card2: #1a1a2e;
+    --text: #e8e8f0;
+    --text2: #a0a0c0;
+    --border: #2a2a4a;
+    --green: #00c851;
+    --red: #ff3547;
+    --blue: #4a9eff;
+    --purple: #9c27b0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #ff4444 100%);
+    padding: 10px 12px 8px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 15px rgba(200,16,46,0.5);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .header-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .header-sub {
+    font-size: 10px;
+    opacity: 0.85;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .clock-display {
+    text-align: right;
+  }
+  .clock-time {
+    font-size: 20px;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+  }
+  .clock-date {
+    font-size: 10px;
+    opacity: 0.8;
+    text-align: right;
+  }
+  .seed-bar {
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    margin-top: 4px;
+  }
+  .seed-label { opacity: 0.7; }
+  .seed-value {
+    font-family: monospace;
+    color: var(--gold);
+    font-weight: bold;
+    font-size: 11px;
+  }
+  .seed-lcg {
+    font-family: monospace;
+    color: #88ccff;
+    font-size: 10px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--secondary);
+    border-bottom: 2px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text2);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: rgba(200,16,46,0.1);
+  }
+  .tab:hover { color: var(--text); }
+
+  /* SECTIONS */
+  .section { display: none; padding: 10px; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title .icon { font-size: 14px; }
+
+  /* LEAGUE SELECTOR */
+  .league-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .league-btn {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text2);
+    transition: all 0.2s;
+  }
+  .league-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(200,16,46,0.4);
+  }
+  .league-btn .flag { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  /* TEAM SELECTOR */
+  .team-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .team-label {
+    font-size: 11px;
+    color: var(--text2);
+    width: 40px;
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+  .team-select {
+    flex: 1;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 7px 8px;
+    font-size: 12px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .team-select:focus { border-color: var(--primary); }
+
+  /* STAR RATING */
+  .star-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .star-label {
+    font-size: 11px;
+    color: var(--text2);
+    width: 40px;
+    flex-shrink: 0;
+  }
+  .stars {
+    display: flex;
+    gap: 3px;
+  }
+  .star {
+    font-size: 18px;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.15s, transform 0.1s;
+    user-select: none;
+  }
+  .star.active { color: var(--gold); }
+  .star:hover { transform: scale(1.2); }
+
+  /* BUTTONS */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(200,16,46,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(200,16,46,0.5); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-green {
+    background: linear-gradient(135deg, #006400, var(--green));
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(0,200,81,0.3);
+  }
+  .btn-warn {
+    background: linear-gradient(135deg, #cc4400, var(--warn));
+    color: #fff;
+  }
+  .btn-sm {
+    padding: 8px 12px;
+    font-size: 11px;
+    display: inline-block;
+    width: auto;
+  }
+
+  /* SCANNER */
+  .scanner-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .scanner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .scanner-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .scanner-status {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .scanner-status.idle { background: #333; color: #aaa; }
+  .scanner-status.scanning { background: rgba(74,158,255,0.2); color: var(--blue); animation: pulse 1s infinite; }
+  .scanner-status.found { background: rgba(0,200,81,0.2); color: var(--green); }
+  .scanner-status.trap { background: rgba(255,53,71,0.2); color: var(--red); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .progress-bar-wrap {
+    background: #0a0a1a;
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease, background 0.3s;
+    background: linear-gradient(90deg, var(--blue), #88aaff);
+    width: 0%;
+  }
+  .progress-bar.green { background: linear-gradient(90deg, #006400, var(--green)); }
+  .progress-bar.red { background: linear-gradient(90deg, #8b0000, var(--red)); }
+
+  .scanner-log {
+    background: #050510;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    height: 120px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 10px;
+    color: #88ff88;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .scanner-log .log-line { margin-bottom: 2px; }
+  .scanner-log .log-warn { color: #ffaa44; }
+  .scanner-log .log-error { color: var(--red); }
+  .scanner-log .log-success { color: var(--green); font-weight: bold; }
+  .scanner-log .log-trap { color: #ff6666; font-weight: bold; }
+  .scanner-log .log-info { color: #88aaff; }
+
+  .flash-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  .flash-overlay.green { background: rgba(0,200,81,0.25); }
+  .flash-overlay.red { background: rgba(255,53,71,0.25); }
+  .flash-overlay.show { opacity: 1; }
+
+  /* SCAN CONTROLS */
+  .scan-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* RESULTS */
+  .result-section {
+    margin-bottom: 10px;
+  }
+  .result-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prediction-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .pred-card {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .pred-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .pred-card.win::before { background: var(--green); }
+  .pred-card.over::before { background: var(--blue); }
+  .pred-card.btts::before { background: var(--gold); }
+  .pred-card.score::before { background: var(--purple); }
+  .pred-card.trap::before { background: var(--red); }
+
+  .pred-label {
+    font-size: 10px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .pred-value {
+    font-size: 18px;
+    font-weight: 900;
+    margin-bottom: 2px;
+  }
+  .pred-value.win { color: var(--green); }
+  .pred-value.over { color: var(--blue); }
+  .pred-value.btts { color: var(--gold); }
+  .pred-value.score { color: var(--purple); }
+  .pred-value.trap { color: var(--red); }
+  .pred-conf {
+    font-size: 10px;
+    color: var(--text2);
+  }
+  .conf-bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 4px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .conf-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  .conf-fill.win { background: var(--green); }
+  .conf-fill.over { background: var(--blue); }
+  .conf-fill.btts { background: var(--gold); }
+  .conf-fill.score { background: var(--purple); }
+
+  /* ANALYSIS */
+  .analysis-block {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  .analysis-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .analysis-icon { font-size: 14px; }
+  .analysis-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .analysis-title.green { color: var(--green); }
+  .analysis-title.red { color: var(--red); }
+  .analysis-title.blue { color: var(--blue); }
+  .analysis-title.gold { color: var(--gold); }
+  .analysis-title.purple { color: var(--purple); }
+  .analysis-title.warn { color: var(--warn); }
+  .analysis-body {
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+  .analysis-body strong { color: var(--text); }
+
+  /* INDICATORS */
+  .indicator-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .indicator-row:last-child { border-bottom: none; }
+  .indicator-name { font-size: 11px; color: var(--text2); }
+  .indicator-value {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .indicator-value.positive { background: rgba(0,200,81,0.15); color: var(--green); }
+  .indicator-value.negative { background: rgba(255,53,71,0.15); color: var(--red); }
+  .indicator-value.neutral { background: rgba(74,158,255,0.15); color: var(--blue); }
+  .indicator-value.warn { background: rgba(255,107,53,0.15); color: var(--warn); }
+  .indicator-value.gold { background: rgba(255,215,0,0.15); color: var(--gold); }
+
+  /* FORM PATTERN */
+  .form-display {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .form-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  .form-badge.W { background: var(--green); color: #000; }
+  .form-badge.D { background: #888; color: #fff; }
+  .form-badge.L { background: var(--red); color: #fff; }
+
+  .scoring-form-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .scoring-form-badge.hot { background: rgba(255,107,53,0.2); color: var(--warn); border: 1px solid var(--warn); }
+  .scoring-form-badge.cold { background: rgba(74,158,255,0.2); color: var(--blue); border: 1px solid var(--blue); }
+  .scoring-form-badge.normal { background: rgba(255,255,255,0.1); color: var(--text2); border: 1px solid var(--border); }
+
+  /* VARIANCE */
+  .variance-meter {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 4px 0;
+  }
+  .variance-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s;
+  }
+
+  /* EXACT SCORES */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .score-item {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .score-item:hover { border-color: var(--primary); }
+  .score-item.top { border-color: var(--green); background: rgba(0,200,81,0.1); }
+  .score-val { font-size: 14px; font-weight: 900; color: var(--text); }
+  .score-prob {
+    font-size: 10px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+  .score-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border);
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--green);
+  }
+
+  /* TRAP DETECTOR */
+  .trap-alert {
+    background: rgba(255,53,71,0.1);
+    border: 1px solid rgba(255,53,71,0.4);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: none;
+  }
+  .trap-alert.show { display: block; }
+  .trap-alert-title {
+    color: var(--red);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .trap-alert-body { font-size: 11px; color: #ffaaaa; line-height: 1.5; }
+
+  /* UNDERDOG */
+  .underdog-alert {
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: none;
+  }
+  .underdog-alert.show { display: block; }
+  .underdog-alert-title {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .underdog-alert-body { font-size: 11px; color: #ffeeaa; line-height: 1.5; }
+
+  /* SEED PANEL */
+  .seed-panel {
+    background: #050510;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  .seed-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .seed-row:last-child { border-bottom: none; }
+  .seed-key { color: #88aaff; }
+  .seed-val { color: var(--gold); font-weight: bold; }
+
+  /* MATCH TIMER */
+  .match-timer {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .timer-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    font-family: monospace;
+    color: var(--green);
+    flex-shrink: 0;
+    position: relative;
+    background: #050510;
+  }
+  .timer-info { flex: 1; }
+  .timer-label { font-size: 10px; color: var(--text2); text-transform: uppercase; }
+  .timer-next { font-size: 13px; font-weight: 700; color: var(--text); }
+  .timer-cycle { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+  /* CONFIDENCE METER */
+  .confidence-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .conf-label { font-size: 11px; color: var(--text2); width: 80px; }
+  .conf-track {
+    flex: 1;
+    height: 12px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .conf-track-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s, background 0.5s;
+  }
+  .conf-pct { font-size: 12px; font-weight: 700; width: 35px; text-align: right; }
+
+  /* HISTORY */
+  .history-item {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .history-teams { flex: 1; font-size: 12px; font-weight: 600; }
+  .history-score { font-size: 14px; font-weight: 900; color: var(--text2); }
+  .history-result {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+  .history-result.correct { background: rgba(0,200,81,0.2); color: var(--green); }
+  .history-result.wrong { background: rgba(255,53,71,0.2); color: var(--red); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 0;
+  }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    gap: 3px;
+  }
+  .badge.green { background: rgba(0,200,81,0.2); color: var(--green); }
+  .badge.red { background: rgba(255,53,71,0.2); color: var(--red); }
+  .badge.blue { background: rgba(74,158,255,0.2); color: var(--blue); }
+  .badge.gold { background: rgba(255,215,0,0.2); color: var(--gold); }
+  .badge.purple { background: rgba(156,39,176,0.2); color: var(--purple); }
+  .badge.warn { background: rgba(255,107,53,0.2); color: var(--warn); }
+
+  /* TOOLTIP */
+  .tooltip-text {
+    font-size: 10px;
+    color: var(--text2);
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  /* MATCH VS DISPLAY */
+  .vs-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--card2);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+  }
+  .vs-team {
+    flex: 1;
+    text-align: center;
+  }
+  .vs-team-name {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text);
+  }
+  .vs-team-stars { margin-top: 3px; }
+  .vs-sep {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--primary);
+    padding: 0 4px;
+  }
+  .vs-league-tag {
+    font-size: 10px;
+    color: var(--text2);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  /* SETTINGS */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 12px; color: var(--text); }
+  .setting-desc { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--green); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 20px; }
+
+  select option { background: #1a1a2e; color: #e8e8f0; }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text2);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+  .empty-state p { font-size: 12px; line-height: 1.6; }
+
+  /* GLOW EFFECTS */
+  .glow-green { box-shadow: 0 0 15px rgba(0,200,81,0.4); border-color: var(--green) !important; }
+  .glow-red { box-shadow: 0 0 15px rgba(255,53,71,0.4); border-color: var(--red) !important; }
+
+  /* ANIMATED SCAN DOTS */
+  .scan-dots::after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+    100% { content: ''; }
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .section-header-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { color: var(--text2); }
+  .info-val { color: var(--text); font-weight: 600; }
+
+  .match-cycle-indicator {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .cycle-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .cycle-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .cycle-dot.past { background: var(--text2); }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--secondary);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px 6px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 9px;
+    transition: color 0.2s;
+    gap: 2px;
+  }
+  .bottom-nav-item .nav-icon { font-size: 18px; }
+  .bottom-nav-item.active { color: var(--primary); }
+  .bottom-nav-item:hover { color: var(--text); }
+
+  .main-content { padding-bottom: 65px; }
+
+  .highlight-flash {
+    animation: highlightFlash 0.5s ease;
+  }
+  @keyframes highlightFlash {
+    0% { background: rgba(0,200,81,0.3); }
+    100% { background: transparent; }
+  }
+</style>
+</head>
+<body>
+
+<!-- FLASH OVERLAY -->
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">⚽ VFL Predictor Pro</div>
+      <div class="header-sub">SportyBet Instant Virtual Football</div>
+    </div>
+    <div class="clock-display">
+      <div class="clock-time" id="clockTime">00:00:00</div>
+      <div class="clock-date" id="clockDate">--</div>
+    </div>
+  </div>
+  <div class="seed-bar">
+    <span class="seed-label">SEED:</span>
+    <span class="seed-value" id="headerSeed">--</span>
+    <span style="opacity:0.4">|</span>
+    <span class="seed-label">LCG:</span>
+    <span class="seed-lcg" id="headerLcg">--</span>
+    <span style="opacity:0.4">|</span>
+    <span class="seed-label" id="headerVariance">VAR: --</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs" id="mainTabs">
+  <div class="tab active" onclick="showTab('setup')">⚙️ Setup</div>
+  <div class="tab" onclick="showTab('scanner')">🔍 Scanner</div>
+  <div class="tab" onclick="showTab('predict')">🎯 Predict</div>
+  <div class="tab" onclick="showTab('analysis')">📊 Analysis</div>
+  <div class="tab" onclick="showTab('history')">📋 History</div>
+  <div class="tab" onclick="showTab('settings')">🛠️ Settings</div>
+</div>
+
+<div class="main-content">
+
+<!-- ======================== SETUP TAB ======================== -->
+<div class="section active" id="tab-setup">
+
+  <!-- Match Timer -->
+  <div class="match-timer">
+    <div class="timer-circle" id="timerCircle">3:00</div>
+    <div class="timer-info">
+      <div class="timer-label">Next Match In</div>
+      <div class="timer-next" id="timerNext">Calculating...</div>
+      <div class="timer-cycle" id="timerCycle">Cycle: -- | Round: --</div>
+    </div>
+    <div>
+      <div class="badge green" id="cycleStatus">LIVE</div>
+    </div>
+  </div>
+
+  <!-- League Selector -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🏆</span> Select League</div>
+    <div class="league-grid">
+      <div class="league-btn active" onclick="selectLeague('england')" id="league-england">
+        <span class="flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>ENG
+      </div>
+      <div class="league-btn" onclick="selectLeague('spain')" id="league-spain">
+        <span class="flag">🇪🇸</span>ESP
+      </div>
+      <div class="league-btn" onclick="selectLeague('germany')" id="league-germany">
+        <span class="flag">🇩🇪</span>GER
+      </div>
+      <div class="league-btn" onclick="selectLeague('italy')" id="league-italy">
+        <span class="flag">🇮🇹</span>ITA
+      </div>
+      <div class="league-btn" onclick="selectLeague('champions')" id="league-champions">
+        <span class="flag">⭐</span>UCL
+      </div>
+      <div class="league-btn" onclick="selectLeague('euros')" id="league-euros">
+        <span class="flag">🇪🇺</span>EURO
+      </div>
+      <div class="league-btn" onclick="selectLeague('clubworldcup')" id="league-clubworldcup">
+        <span class="flag">🌍</span>CWC
+      </div>
+    </div>
+    <div class="badge blue" id="leagueName">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England Premier League</div>
+  </div>
+
+  <!-- Team Selection -->
+  <div class="card">
+    <div class="card-title"><span class="icon">👕</span> Select Teams</div>
+
+    <div class="team-row">
+      <div class="team-label">🏠 Home</div>
+      <select class="team-select" id="homeTeam" onchange="onTeamChange()">
+        <option value="">-- Select Home Team --</option>
+      </select>
+    </div>
+
+    <div class="team-row">
+      <div class="team-label">✈️ Away</div>
+      <select class="team-select" id="awayTeam" onchange="onTeamChange()">
+        <option value="">-- Select Away Team --</option>
+      </select>
+    </div>
+
+    <!-- Star Ratings -->
+    <div class="divider"></div>
+    <div class="star-row">
+      <div class="star-label">🏠 Stars</div>
+      <div class="stars" id="homeStars">
+        <span class="star" onclick="setStar('home',1)">★</span>
+        <span class="star" onclick="setStar('home',2)">★</span>
+        <span class="star" onclick="setStar('home',3)">★</span>
+        <span class="star" onclick="setStar('home',4)">★</span>
+        <span class="star" onclick="setStar('home',5)">★</span>
+      </div>
+      <span class="badge gold" id="homeStarBadge">0★</span>
+    </div>
+    <div class="star-row">
+      <div class="star-label">✈️ Stars</div>
+      <div class="stars" id="awayStars">
+        <span class="star" onclick="setStar('away',1)">★</span>
+        <span class="star" onclick="setStar('away',2)">★</span>
+        <span class="star" onclick="setStar('away',3)">★</span>
+        <span class="star" onclick="setStar('away',4)">★</span>
+        <span class="star" onclick="setStar('away',5)">★</span>
+      </div>
+      <span class="badge gold" id="awayStarBadge">0★</span>
+    </div>
+
+    <!-- VS Display -->
+    <div class="vs-display" id="vsDisplay">
+      <div class="vs-team">
+        <div class="vs-team-name" id="vsHome">--</div>
+        <div class="vs-team-stars" id="vsHomeStars">☆☆☆☆☆</div>
+      </div>
+      <div class="vs-sep">VS</div>
+      <div class="vs-team">
+        <div class="vs-team-name" id="vsAway">--</div>
+        <div class="vs-team-stars" id="vsAwayStars">☆☆☆☆☆</div>
+      </div>
+    </div>
+    <div class="vs-league-tag" id="vsLeagueTag">Select teams above</div>
+
+    <button class="btn btn-primary" onclick="runPrediction()" id="predictBtn">
+      🎯 GENERATE PREDICTION
+    </button>
+  </div>
+
+  <!-- Quick Seed Info -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔑</span> Seed Estimator</div>
+    <div class="seed-panel" id="seedPanel">
+      <div class="seed-row"><span class="seed-key">timestamp_ms</span><span class="seed-val" id="sp_ts">--</span></div>
+      <div class="seed-row"><span class="seed-key">seed_direct</span><span class="seed-val" id="sp_direct">--</span></div>
+      <div class="seed-row"><span class="seed-key">seed_NR</span><span class="seed-val" id="sp_nr">--</span></div>
+      <div class="seed-row"><span class="seed-key">seed_PM</span><span class="seed-val" id="sp_pm">--</span></div>
+      <div class="seed-row"><span class="seed-key">seed_glibc</span><span class="seed-val" id="sp_glibc">--</span></div>
+      <div class="seed-row"><span class="seed-key">variance_index</span><span class="seed-val" id="sp_var">--</span></div>
+      <div class="seed-row"><span class="seed-key">cycle_phase</span><span class="seed-val" id="sp_phase">--</span></div>
+    </div>
+    <div class="tooltip-text">Seed estimated using timestamp-based PRNG methodology (LCG variants: Numerical Recipes, Park-Miller, glibc)</div>
+  </div>
+
+</div>
+
+<!-- ======================== SCANNER TAB ======================== -->
+<div class="section" id="tab-scanner">
+
+  <div class="scanner-container">
+    <div class="scanner-header">
+      <div class="scanner-title">🔍 Auto Scanner</div>
+      <div class="scanner-status idle" id="scannerStatus">IDLE</div>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="scanProgress"></div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text2); margin-bottom:8px;">
+      <span id="scanPct">0%</span>
+      <span id="scanCondition">Waiting to start...</span>
+      <span id="scanCount">0/100</span>
+    </div>
+
+    <div class="scanner-log" id="scannerLog">
+      <div class="log-line log-info">[SYSTEM] VFL Predictor Pro v2.0 initialized</div>
+      <div class="log-line log-info">[SYSTEM] Seed estimator: PRNG timestamp-based</div>
+      <div class="log-line log-info">[SYSTEM] Ready to scan. Select teams and start.</div>
+    </div>
+
+    <div class="scan-controls">
+      <button class="btn btn-green" onclick="startScanner()" id="scanStartBtn">▶ START SCAN</button>
+      <button class="btn btn-warn" onclick="stopScanner()" id="scanStopBtn">⏹ STOP</button>
+    </div>
+  </div>
+
+  <!-- Scanner Conditions -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span> Scan Conditions</div>
+    <div class="indicator-row">
+      <span class="indicator-name">Seed Stability Window</span>
+      <span class="indicator-value neutral" id="sc_seed">Checking...</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Variance Threshold</span>
+      <span class="indicator-value neutral" id="sc_var">Checking...</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Trap Pattern Clear</span>
+      <span class="indicator-value neutral" id="sc_trap">Checking...</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Star Differential</span>
+      <span class="indicator-value neutral" id="sc_star">Checking...</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Scoring Form Active</span>
+      <span class="indicator-value neutral" id="sc_form">Checking...</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Cycle Phase Alignment</span>
+      <span class="indicator-value neutral" id="sc_cycle">Checking...</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Underdog Upset Risk</span>
+      <span class="indicator-value neutral" id="sc_underdog">Checking...</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Overall Bet Signal</span>
+      <span class="indicator-value neutral" id="sc_overall">PENDING</span>
+    </div>
+  </div>
+
+  <!-- Cycle Tracker -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔄</span> Match Cycle Tracker</div>
+    <div class="match-cycle-indicator" id="cycleDots"></div>
+    <div class="info-row">
+      <span class="info-key">Current Cycle Phase</span>
+      <span class="info-val" id="cyclePhaseDisplay">--</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Matches in Cycle</span>
+      <span class="info-val" id="cycleMatchCount">--</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">ARpt Balance</span>
+      <span class="info-val" id="arptBalance">--</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Next High-Value Window</span>
+      <span class="info-val" id="nextWindow">--</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ======================== PREDICT TAB ======================== -->
+<div class="section" id="tab-predict">
+
+  <div class="empty-state" id="predictEmpty">
+    <div class="icon">🎯</div>
+    <p>No prediction generated yet.<br>Go to <strong>Setup</strong> tab, select your teams and stars, then tap <strong>Generate Prediction</strong>.</p>
+  </div>
+
+  <div id="predictResults" style="display:none;">
+
+    <!-- Match Header -->
+    <div class="card" id="resultMatchHeader">
+      <div class="vs-display">
+        <div class="vs-team">
+          <div class="vs-team-name" id="res_home">--</div>
+          <div class="vs-team-stars" id="res_homeStars">--</div>
+        </div>
+        <div class="vs-sep">VS</div>
+        <div class="vs-team">
+          <div class="vs-team-name" id="res_away">--</div>
+          <div class="vs-team-stars" id="res_awayStars">--</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+        <span class="badge blue" id="res_league">--</span>
+        <span class="badge gold" id="res_seed_badge">SEED: --</span>
+        <span class="badge" id="res_confidence_badge">CONF: --</span>
+      </div>
+    </div>
+
+    <!-- TRAP ALERT -->
+    <div class="trap-alert" id="trapAlert">
+      <div class="trap-alert-title">⚠️ TRAP DETECTED — HIGH RISK</div>
+      <div class="trap-alert-body" id="trapAlertBody">--</div>
+    </div>
+
+    <!-- UNDERDOG ALERT -->
+    <div class="underdog-alert" id="underdogAlert">
+      <div class="underdog-alert-title">⚡ UNDERDOG UPSET POTENTIAL</div>
+      <div class="underdog-alert-body" id="underdogAlertBody">--</div>
+    </div>
+
+    <!-- Prediction Cards -->
+    <div class="prediction-grid">
+      <div class="pred-card win">
+        <div class="pred-label">Straight Win</div>
+        <div class="pred-value win" id="pred_win">--</div>
+        <div class="pred-conf" id="pred_win_conf">--</div>
+        <div class="conf-bar"><div class="conf-fill win" id="pred_win_bar" style="width:0%"></div></div>
+      </div>
+      <div class="pred-card over">
+        <div class="pred-label">Over Goals</div>
+        <div class="pred-value over" id="pred_over">--</div>
+        <div class="pred-conf" id="pred_over_conf">--</div>
+        <div class="conf-bar"><div class="conf-fill over" id="pred_over_bar" style="width:0%"></div></div>
+      </div>
+      <div class="pred-card btts">
+        <div class="pred-label">BTTS</div>
+        <div class="pred-value btts" id="pred_btts">--</div>
+        <div class="pred-conf" id="pred_btts_conf">--</div>
+        <div class="conf-bar"><div class="conf-fill btts" id="pred_btts_bar" style="width:0%"></div></div>
+      </div>
+      <div class="pred-card score">
+        <div class="pred-label">Top Score</div>
+        <div class="pred-value score" id="pred_score">--</div>
+        <div class="pred-conf" id="pred_score_conf">--</div>
+        <div class="conf-bar"><div class="conf-fill score" id="pred_score_bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Overall Confidence -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📈</span> Overall Confidence</div>
+      <div class="confidence-display">
+        <div class="conf-label">Win Prob</div>
+        <div class="conf-track"><div class="conf-track-fill" id="conf_win" style="width:0%; background:var(--green)"></div></div>
+        <div class="conf-pct" id="conf_win_pct" style="color:var(--green)">0%</div>
+      </div>
+      <div class="confidence-display">
+        <div class="conf-label">Over Goals</div>
+        <div class="conf-track"><div class="conf-track-fill" id="conf_over" style="width:0%; background:var(--blue)"></div></div>
+        <div class="conf-pct" id="conf_over_pct" style="color:var(--blue)">0%</div>
+      </div>
+      <div class="confidence-display">
+        <div class="conf-label">BTTS</div>
+        <div class="conf-track"><div class="conf-track-fill" id="conf_btts" style="width:0%; background:var(--gold)"></div></div>
+        <div class="conf-pct" id="conf_btts_pct" style="color:var(--gold)">0%</div>
+      </div>
+      <div class="confidence-display">
+        <div class="conf-label">Exact Score</div>
+        <div class="conf-track"><div class="conf-track-fill" id="conf_score" style="width:0%; background:var(--purple)"></div></div>
+        <div class="conf-pct" id="conf_score_pct" style="color:var(--purple)">0%</div>
+      </div>
+    </div>
+
+    <!-- Exact Score Grid -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span> Exact Score Probabilities</div>
+      <div class="score-grid" id="scoreGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Scoring Form -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔥</span> Scoring Form Pattern</div>
+      <div class="result-section">
+        <div class="result-title" id="homeFormTitle">Home Team Form</div>
+        <div class="form-display" id="homeForm"></div>
+        <div id="homeFormBadge"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="result-section">
+        <div class="result-title" id="awayFormTitle">Away Team Form</div>
+        <div class="form-display" id="awayForm"></div>
+        <div id="awayFormBadge"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================== ANALYSIS TAB ======================== -->
+<div class="section" id="tab-analysis">
+
+  <div class="empty-state" id="analysisEmpty">
+    <div class="icon">📊</div>
+    <p>Run a prediction first to see detailed analysis.</p>
+  </div>
+
+  <div id="analysisResults" style="display:none;">
+
+    <!-- Seed Analysis -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">🔑</span>
+        <span class="analysis-title blue">SEED & RNG ANALYSIS</span>
+      </div>
+      <div class="analysis-body" id="analysis_seed">--</div>
+    </div>
+
+    <!-- Trap Analysis -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">⚠️</span>
+        <span class="analysis-title red">TRAP DETECTOR</span>
+      </div>
+      <div class="analysis-body" id="analysis_trap">--</div>
+    </div>
+
+    <!-- Underdog Analysis -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">⚡</span>
+        <span class="analysis-title gold">UNDERDOG UPSET ANALYSIS</span>
+      </div>
+      <div class="analysis-body" id="analysis_underdog">--</div>
+    </div>
+
+    <!-- Variance Analysis -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">📉</span>
+        <span class="analysis-title purple">VARIANCE ANALYSIS</span>
+      </div>
+      <div class="analysis-body" id="analysis_variance">--</div>
+      <div style="margin-top:8px;">
+        <div style="font-size:10px; color:var(--text2); margin-bottom:3px;">Variance Index</div>
+        <div class="variance-meter"><div class="variance-fill" id="variance_bar" style="width:0%; background:var(--purple)"></div></div>
+        <div style="font-size:10px; color:var(--text2); margin-top:2px;" id="variance_label">--</div>
+      </div>
+    </div>
+
+    <!-- WNt Analysis -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">⚖️</span>
+        <span class="analysis-title green">WEIGHTED NUMBER (WNt) ANALYSIS</span>
+      </div>
+      <div class="analysis-body" id="analysis_wnt">--</div>
+      <div style="margin-top:8px;">
+        <div class="indicator-row">
+          <span class="indicator-name">Home WNt</span>
+          <span class="indicator-value positive" id="wnt_home">--</span>
+        </div>
+        <div class="indicator-row">
+          <span class="indicator-name">Away WNt</span>
+          <span class="indicator-value neutral" id="wnt_away">--</span>
+        </div>
+        <div class="indicator-row">
+          <span class="indicator-name">WNt Differential</span>
+          <span class="indicator-value gold" id="wnt_diff">--</span>
+        </div>
+        <div class="indicator-row">
+          <span class="indicator-name">Dominance Factor</span>
+          <span class="indicator-value" id="wnt_dom">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARpt Analysis -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">🔄</span>
+        <span class="analysis-title warn">ARpt SEASONAL BALANCE</span>
+      </div>
+      <div class="analysis-body" id="analysis_arpt">--</div>
+    </div>
+
+    <!-- Goal Analysis -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">⚽</span>
+        <span class="analysis-title green">GOAL PROBABILITY ANALYSIS</span>
+      </div>
+      <div class="analysis-body" id="analysis_goals">--</div>
+      <div style="margin-top:8px;">
+        <div class="indicator-row">
+          <span class="indicator-name">Expected Goals (Home)</span>
+          <span class="indicator-value positive" id="xg_home">--</span>
+        </div>
+        <div class="indicator-row">
+          <span class="indicator-name">Expected Goals (Away)</span>
+          <span class="indicator-value neutral" id="xg_away">--</span>
+        </div>
+        <div class="indicator-row">
+          <span class="indicator-name">Total xG</span>
+          <span class="indicator-value blue" id="xg_total">--</span>
+        </div>
+        <div class="indicator-row">
+          <span class="indicator-name">Over 2.5 Probability</span>
+          <span class="indicator-value" id="over25_prob">--</span>
+        </div>
+        <div class="indicator-row">
+          <span class="indicator-name">BTTS Probability</span>
+          <span class="indicator-value" id="btts_prob">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time-of-Day Factor -->
+    <div class="analysis-block">
+      <div class="analysis-header">
+        <span class="analysis-icon">🕐</span>
+        <span class="analysis-title blue">TIME-OF-DAY FACTOR</span>
+      </div>
+      <div class="analysis-body" id="analysis_tod">--</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================== HISTORY TAB ======================== -->
+<div class="section" id="tab-history">
+  <div class="card">
+    <div class="section-header">
+      <div class="section-header-title">📋 Prediction History</div>
+      <button class="btn btn-warn btn-sm" onclick="clearHistory()">Clear</button>
+    </div>
+    <div id="historyList">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>No predictions yet. Generate your first prediction!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Summary -->
+  <div class="card" id="historyStats" style="display:none;">
+    <div class="card-title"><span class="icon">📈</span> Session Stats</div>
+    <div class="indicator-row">
+      <span class="indicator-name">Total Predictions</span>
+      <span class="indicator-value neutral" id="stat_total">0</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Traps Detected</span>
+      <span class="indicator-value negative" id="stat_traps">0</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Underdog Alerts</span>
+      <span class="indicator-value gold" id="stat_underdog">0</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">High Confidence (>70%)</span>
+      <span class="indicator-value positive" id="stat_highconf">0</span>
+    </div>
+    <div class="indicator-row">
+      <span class="indicator-name">Avg Confidence</span>
+      <span class="indicator-value blue" id="stat_avgconf">0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SETTINGS TAB ======================== -->
+<div class="section" id="tab-settings">
+  <div class="card">
+    <div class="card-title"><span class="icon">🛠️</span> Predictor Settings</div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">LCG Variant</div>
+        <div class="setting-desc">Seed transformation algorithm</div>
+      </div>
+      <select class="team-select" style="width:130px;" id="lcgVariant" onchange="updateSettings()">
+        <option value="direct">Direct</option>
+        <option value="numerical_recipes" selected>Numerical Recipes</option>
+        <option value="park_miller">Park-Miller</option>
+        <option value="glibc">glibc</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Trap Sensitivity</div>
+        <div class="setting-desc">Higher = more trap warnings</div>
+      </div>
+      <select class="team-select" style="width:100px;" id="trapSensitivity" onchange="updateSettings()">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Variance Mode</div>
+        <div class="setting-desc">Outcome spread calculation</div>
+      </div>
+      <select class="team-select" style="width:100px;" id="varianceMode" onchange="updateSettings()">
+        <option value="low">Conservative</option>
+        <option value="medium" selected>Balanced</option>
+        <option value="high">Aggressive</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Auto-Scan Speed</div>
+        <div class="setting-desc">Scanner iteration speed</div>
+      </div>
+      <select class="team-select" style="width:100px;" id="scanSpeed" onchange="updateSettings()">
+        <option value="fast">Fast</option>
+        <option value="normal" selected>Normal</option>
+        <option value="slow">Slow</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Flash Alerts</div>
+        <div class="setting-desc">Screen flash on condition met</div>
+      </div>
+      <div class="toggle on" id="toggle_flash" onclick="toggleSetting('flash')"></div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Underdog Detection</div>
+        <div class="setting-desc">Alert on upset potential</div>
+      </div>
+      <div class="toggle on" id="toggle_underdog" onclick="toggleSetting('underdog')"></div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Scoring Form Tracker</div>
+        <div class="setting-desc">Track team scoring patterns</div>
+      </div>
+      <div class="toggle on" id="toggle_form" onclick="toggleSetting('form')"></div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">ARpt Seasonal Balance</div>
+        <div class="setting-desc">Account for seasonal corrections</div>
+      </div>
+      <div class="toggle on" id="toggle_arpt" onclick="toggleSetting('arpt')"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">ℹ️</span> About</div>
+    <div class="analysis-body">
+      <strong>VFL Predictor Pro v2.0</strong><br>
+      SportyBet Instant Virtual Football Predictor<br><br>
+      Based on PRNG seed estimation methodology using timestamp-based LCG transformation. Incorporates WNt (Weighted Number), ARpt (Allocated Result Percentage), trap detection, underdog upset analysis, and variance modeling.<br><br>
+      <strong style="color:var(--warn);">⚠️ Disclaimer:</strong> This tool is for educational and analytical purposes. Virtual football outcomes are determined by certified RNG systems. No prediction tool can guarantee outcomes. Gamble responsibly.
+    </div>
+  </div>
+</div>
+
+</div><!-- end main-content -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="bottom-nav-item active" onclick="showTab('setup')" id="nav-setup">
+    <span class="nav-icon">⚙️</span>Setup
+  </div>
+  <div class="bottom-nav-item" onclick="showTab('scanner')" id="nav-scanner">
+    <span class="nav-icon">🔍</span>Scanner
+  </div>
+  <div class="bottom-nav-item" onclick="showTab('predict')" id="nav-predict">
+    <span class="nav-icon">🎯</span>Predict
+  </div>
+  <div class="bottom-nav-item" onclick="showTab('analysis')" id="nav-analysis">
+    <span class="nav-icon">📊</span>Analysis
+  </div>
+  <div class="bottom-nav-item" onclick="showTab('history')" id="nav-history">
+    <span class="nav-icon">📋</span>History
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA: LEAGUE TEAMS
+// ============================================================
+const LEAGUES = {
+  england: {
+    name: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 England Premier League',
+    teams: [
+      {code:'MUN', name:'Manchester United'},
+      {code:'ARS', name:'Arsenal'},
+      {code:'NEW', name:'Newcastle United'},
+      {code:'BUR', name:'Burnley'},
+      {code:'FOR', name:'Nottingham Forest'},
+      {code:'BHA', name:'Brighton & Hove Albion'},
+      {code:'LIV', name:'Liverpool'},
+      {code:'SUN', name:'Sunderland'},
+      {code:'MCI', name:'Manchester City'},
+      {code:'WOL', name:'Wolverhampton'},
+      {code:'LEE', name:'Leeds United'},
+      {code:'AST', name:'Aston Villa'},
+      {code:'BRE', name:'Brentford'},
+      {code:'CRY', name:'Crystal Palace'},
+      {code:'CHE', name:'Chelsea'},
+      {code:'WHU', name:'West Ham United'},
+      {code:'FUL', name:'Fulham'},
+      {code:'BOU', name:'Bournemouth'},
+      {code:'EVE', name:'Everton'},
+      {code:'TOT', name:'Tottenham Hotspur'}
+    ]
+  },
+  spain: {
+    name: '🇪🇸 Spain La Liga',
+    teams: [
+      {code:'FCB', name:'FC Barcelona'},
+      {code:'RMA', name:'Real Madrid'},
+      {code:'ATM', name:'Atletico Madrid'},
+      {code:'SEV', name:'Sevilla'},
+      {code:'VIL', name:'Villarreal'},
+      {code:'BIL', name:'Athletic Bilbao'},
+      {code:'RSO', name:'Real Sociedad'},
+      {code:'VCF', name:'Valencia'},
+      {code:'LEV', name:'Levante'},
+      {code:'GET', name:'Getafe'},
+      {code:'CEL', name:'Celta Vigo'},
+      {code:'GIR', name:'Girona'},
+      {code:'ELC', name:'Elche'},
+      {code:'ESP', name:'Espanyol'},
+      {code:'OSA', name:'Osasuna'},
+      {code:'ALA', name:'Alaves'},
+      {code:'RAY', name:'Rayo Vallecano'},
+      {code:'MAL', name:'Mallorca'},
+      {code:'OVI', name:'Oviedo'},
+      {code:'RBB', name:'Real Betis'}
+    ]
+  },
+  germany: {
+    name: '🇩🇪 Germany Bundesliga',
+    teams: [
+      {code:'BAY', name:'Bayern Munich'},
+      {code:'BVB', name:'Borussia Dortmund'},
+      {code:'LEV', name:'Bayer Leverkusen'},
+      {code:'SGE', name:'Eintracht Frankfurt'},
+      {code:'TSG', name:'Hoffenheim'},
+      {code:'BMG', name:'Borussia M\'gladbach'},
+      {code:'FCA', name:'Augsburg'},
+      {code:'SCF', name:'SC Freiburg'},
+      {code:'WOB', name:'Wolfsburg'},
+      {code:'KOE', name:'Cologne'},
+      {code:'HDH', name:'Heidenheim'},
+      {code:'MAI', name:'Mainz'},
+      {code:'HSV', name:'Hamburg SV'},
+      {code:'BMU', name:'Bochum'},
+      {code:'RBL', name:'RB Leipzig'},
+      {code:'HER', name:'Hertha Berlin'},
+      {code:'UNB', name:'Union Berlin'},
+      {code:'STU', name:'Stuttgart'},
+      {code:'WER', name:'Werder Bremen'},
+      {code:'DAR', name:'Darmstadt'}
+    ]
+  },
+  italy: {
+    name: '🇮🇹 Italy Serie A',
+    teams: [
+      {code:'JUV', name:'Juventus'},
+      {code:'INT', name:'Inter Milan'},
+      {code:'ACM', name:'AC Milan'},
+      {code:'NAP', name:'Napoli'},
+      {code:'ROM', name:'AS Roma'},
+      {code:'LAZ', name:'Lazio'},
+      {code:'ATL', name:'Atalanta'},
+      {code:'FIO', name:'Fiorentina'},
+      {code:'TOR', name:'Torino'},
+      {code:'BOL', name:'Bologna'},
+      {code:'SAM', name:'Sampdoria'},
+      {code:'GEN', name:'Genoa'},
+      {code:'VEN', name:'Venezia'},
+      {code:'CAG', name:'Cagliari'},
+      {code:'MON', name:'Monza'},
+      {code:'EMP', name:'Empoli'},
+      {code:'FRO', name:'Frosinone'},
+      {code:'SAL', name:'Salernitana'},
+      {code:'LEC', name:'Lecce'},
+      {code:'UDI', name:'Udinese'}
+    ]
+  },
+  champions: {
+    name: '⭐ UEFA Champions League',
+    teams: [
+      {code:'RMA', name:'Real Madrid'},
+      {code:'FCB', name:'FC Barcelona'},
+      {code:'BAY', name:'Bayern Munich'},
+      {code:'MCI', name:'Manchester City'},
+      {code:'LIV', name:'Liverpool'},
+      {code:'CHE', name:'Chelsea'},
+      {code:'JUV', name:'Juventus'},
+      {code:'PSG', name:'Paris Saint-Germain'},
+      {code:'INT', name:'Inter Milan'},
+      {code:'ATM', name:'Atletico Madrid'},
+      {code:'BVB', name:'Borussia Dortmund'},
+      {code:'ARS', name:'Arsenal'},
+      {code:'ACM', name:'AC Milan'},
+      {code:'NAP', name:'Napoli'},
+      {code:'LEV', name:'Bayer Leverkusen'},
+      {code:'POR', name:'Porto'},
+      {code:'AJX', name:'Ajax'},
+      {code:'BEN', name:'Benfica'},
+      {code:'CEL', name:'Celtic'},
+      {code:'TOT', name:'Tottenham Hotspur'}
+    ]
+  },
+  euros: {
+    name: '🇪🇺 UEFA European Championship',
+    teams: [
+      {code:'ENG', name:'England'},
+      {code:'FRA', name:'France'},
+      {code:'GER', name:'Germany'},
+      {code:'ESP', name:'Spain'},
+      {code:'ITA', name:'Italy'},
+      {code:'POR', name:'Portugal'},
+      {code:'NED', name:'Netherlands'},
+      {code:'BEL', name:'Belgium'},
+      {code:'CRO', name:'Croatia'},
+      {code:'DEN', name:'Denmark'},
+      {code:'SUI', name:'Switzerland'},
+      {code:'AUT', name:'Austria'},
+      {code:'POL', name:'Poland'},
+      {code:'TUR', name:'Turkey'},
+      {code:'UKR', name:'Ukraine'},
+      {code:'SCO', name:'Scotland'},
+      {code:'HUN', name:'Hungary'},
+      {code:'CZE', name:'Czech Republic'},
+      {code:'SRB', name:'Serbia'},
+      {code:'SVK', name:'Slovakia'}
+    ]
+  },
+  clubworldcup: {
+    name: '🌍 FIFA Club World Cup',
+    teams: [
+      {code:'RMA', name:'Real Madrid'},
+      {code:'MCI', name:'Manchester City'},
+      {code:'CHE', name:'Chelsea'},
+      {code:'BAY', name:'Bayern Munich'},
+      {code:'PSG', name:'Paris Saint-Germain'},
+      {code:'INT', name:'Inter Milan'},
+      {code:'POR', name:'Porto'},
+      {code:'BEN', name:'Benfica'},
+      {code:'FLA', name:'Flamengo'},
+      {code:'FLU', name:'Fluminense'},
+      {code:'PAL', name:'Palmeiras'},
+      {code:'RIV', name:'River Plate'},
+      {code:'BOC', name:'Boca Juniors'},
+      {code:'AML', name:'Al-Ahly'},
+      {code:'WAY', name:'Wydad Casablanca'},
+      {code:'SEA', name:'Seattle Sounders'},
+      {code:'LAF', name:'LA Football Club'},
+      {code:'URA', name:'Urawa Red Diamonds'},
+      {code:'ALH', name:'Al-Hilal'},
+      {code:'MNT', name:'Monterrey'}
+    ]
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  selectedLeague: 'england',
+  homeTeam: null,
+  awayTeam: null,
+  homeStars: 0,
+  awayStars: 0,
+  lastPrediction: null,
+  scannerRunning: false,
+  scannerInterval: null,
+  scanProgress: 0,
+  history: [],
+  settings: {
+    lcgVariant: 'numerical_recipes',
+    trapSensitivity: 'medium',
+    varianceMode: 'medium',
+    scanSpeed: 'normal',
+    flash: true,
+    underdog: true,
+    form: true,
+    arpt: true
+  },
+  stats: {
+    total: 0,
+    traps: 0,
+    underdogs: 0,
+    highConf: 0,
+    totalConf: 0
+  }
+};
+
+// ============================================================
+// SEED ESTIMATOR (PRNG)
+// ============================================================
+const LCG_PARAMS = {
+  direct: null,
+  numerical_recipes: {a: 1664525, c: 1013904223, m: Math.pow(2, 32)},
+  park_miller: {a: 16807, c: 0, m: Math.pow(2, 31) - 1},
+  glibc: {a: 1103515245, c: 12345, m: Math.pow(2, 31)}
+};
+
+function generateSeed(refTime = null, variant = null) {
+  const t = refTime || Date.now();
+  const ts = Math.round(t);
+  const params = LCG_PARAMS[variant || state.settings.lcgVariant];
+  if (!params) return ts;
+  // Use BigInt for large number arithmetic
+  const a = BigInt(params.a);
+  const c = BigInt(params.c);
+  const m = BigInt(Math.round(params.m));
+  const tsBig = BigInt(ts);
+  return Number((a * tsBig + c) % m);
+}
+
+function generateAllSeeds() {
+  const ts = Date.now();
+  return {
+    ts: ts,
+    direct: ts,
+    nr: generateSeed(ts, 'numerical_recipes'),
+    pm: generateSeed(ts, 'park_miller'),
+    glibc: generateSeed(ts, 'glibc'),
+    active: generateSeed(ts, state.settings.lcgVariant)
+  };
+}
+
+function getVarianceIndex(seed) {
+  // Variance derived from seed modular properties
+  const v = (seed % 1000) / 1000;
+  return v;
+}
+
+function getCyclePhase(ts) {
+  // 3-minute cycles (180000 ms)
+  const cycleMs = 180000;
+  const phase = (ts % cycleMs) / cycleMs;
+  const phaseNum = Math.floor(phase * 10) + 1;
+  return { phase: phase, phaseNum: phaseNum, pct: Math.round(phase * 100) };
+}
+
+// ============================================================
+// CLOCK & TIMER
+// ============================================================
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clockTime').textContent = `${h}:${m}:${s}`;
+
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('clockDate').textContent =
+    `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+  // Update seed display
+  const seeds = generateAllSeeds();
+  const varIdx = getVarianceIndex(seeds.active);
+  const cycleInfo = getCyclePhase(seeds.ts);
+
+  document.getElementById('headerSeed').textContent = seeds.active.toString().slice(-8);
+  document.getElementById('headerLcg').textContent = seeds.nr.toString().slice(-6);
+  document.getElementById('headerVariance').textContent = `VAR: ${(varIdx * 100).toFixed(1)}%`;
+
+  // Seed panel
+  document.getElementById('sp_ts').textContent = seeds.ts;
+  document.getElementById('sp_direct').textContent = seeds.direct;
+  document.getElementById('sp_nr').textContent = seeds.nr;
+  document.getElementById('sp_pm').textContent = seeds.pm;
+  document.getElementById('sp_glibc').textContent = seeds.glibc;
+  document.getElementById('sp_var').textContent = (varIdx * 100).toFixed(2) + '%';
+  document.getElementById('sp_phase').textContent = `Phase ${cycleInfo.phaseNum}/10 (${cycleInfo.pct}%)`;
+
+  // Timer
+  const timeInCycle = seeds.ts % 180000;
+  const remaining = 180000 - timeInCycle;
+  const remSec = Math.ceil(remaining / 1000);
+  const remM = Math.floor(remSec / 60);
+  const remS = remSec % 60;
+  document.getElementById('timerCircle').textContent = `${remM}:${String(remS).padStart(2,'0')}`;
+  document.getElementById('timerNext').textContent = `${remM}m ${remS}s`;
+  document.getElementById('timerCycle').textContent =
+    `Cycle Phase: ${cycleInfo.phaseNum}/10 | Progress: ${cycleInfo.pct}%`;
+
+  // Cycle dots
+  updateCycleDots(cycleInfo.phaseNum);
+  document.getElementById('cyclePhaseDisplay').textContent = `Phase ${cycleInfo.phaseNum}/10`;
+  document.getElementById('cycleMatchCount').textContent = `${cycleInfo.phaseNum} of 10`;
+  document.getElementById('arptBalance').textContent = getARptBalance(seeds.active);
+  document.getElementById('nextWindow').textContent = getNextWindow(cycleInfo);
+}
+
+function updateCycleDots(phase) {
+  const container = document.getElementById('cycleDots');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'cycle-dot';
+    if (i < phase) dot.classList.add('past');
+    else if (i === phase) dot.classList.add('active');
+    container.appendChild(dot);
+  }
+}
+
+function getARptBalance(seed) {
+  const v = seed % 100;
+  if (v < 30) return 'Under-balanced (Home bias)';
+  if (v < 60) return 'Balanced';
+  if (v < 80) return 'Over-balanced (Away bias)';
+  return 'Correction phase active';
+}
+
+function getNextWindow(cycleInfo) {
+  const remaining = 10 - cycleInfo.phaseNum;
+  if (remaining <= 2) return 'NOW — High value window!';
+  return `~${remaining * 3} minutes`;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
+
+  document.getElementById('tab-' + tab).classList.add('active');
+
+  const tabs = document.querySelectorAll('.tab');
+  const tabMap = ['setup','scanner','predict','analysis','history','settings'];
+  const idx = tabMap.indexOf(tab);
+  if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
+
+  const navEl = document.getElementById('nav-' + tab);
+  if (navEl) navEl.classList.add('active');
+}
+
+// ============================================================
+// LEAGUE SELECTION
+// ============================================================
+function selectLeague(league) {
+  state.selectedLeague = league;
+  document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('league-' + league).classList.add('active');
+  document.getElementById('leagueName').textContent = LEAGUES[league].name;
+  populateTeams();
+  resetMatchDisplay();
+}
+
+function populateTeams() {
+  const league = LEAGUES[state.selectedLeague];
+  const homeSelect = document.getElementById('homeTeam');
+  const awaySelect = document.getElementById('awayTeam');
+
+  homeSelect.innerHTML = '<option value="">-- Select Home Team --</option>';
+  awaySelect.innerHTML = '<option value="">-- Select Away Team --</option>';
+
+  league.teams.forEach(team => {
+    const opt1 = new Option(`${team.code} - ${team.name}`, team.code);
+    const opt2 = new Option(`${team.code} - ${team.name}`, team.code);
+    homeSelect.appendChild(opt1);
+    awaySelect.appendChild(opt2);
+  });
+
+  state.homeTeam = null;
+  state.awayTeam = null;
+}
+
+function onTeamChange() {
+  const homeCode = document.getElementById('homeTeam').value;
+  const awayCode = document.getElementById('awayTeam').value;
+
+  state.homeTeam = homeCode || null;
+  state.awayTeam = awayCode || null;
+
+  const league = LEAGUES[state.selectedLeague];
+  const homeTeam = league.teams.find(t => t.code === homeCode);
+  const awayTeam = league.teams.find(t => t.code === awayCode);
+
+  document.getElementById('vsHome').textContent = homeTeam ? homeTeam.code : '--';
+  document.getElementById('vsAway').textContent = awayTeam ? awayTeam.code : '--';
+  document.getElementById('vsLeagueTag').textContent = league.name;
+  updateStarDisplays();
+}
+
+function resetMatchDisplay() {
+  document.getElementById('vsHome').textContent = '--';
+  document.getElementById('vsAway').textContent = '--';
+  document.getElementById('vsLeagueTag').textContent = 'Select teams above';
+}
+
+// ============================================================
+// STAR RATINGS
+// ============================================================
+function setStar(team, value) {
+  if (team === 'home') {
+    state.homeStars = value;
+    updateStarUI('homeStars', value);
+    document.getElementById('homeStarBadge').textContent = value + '★';
+  } else {
+    state.awayStars = value;
+    updateStarUI('awayStars', value);
+    document.getElementById('awayStarBadge').textContent = value + '★';
+  }
+  updateStarDisplays();
+}
+
+function updateStarUI(containerId, value) {
+  const stars = document.querySelectorAll(`#${containerId} .star`);
+  stars.forEach((star, i) => {
+    star.classList.toggle('active', i < value);
+  });
+}
+
+function updateStarDisplays() {
+  const homeStars = '★'.repeat(state.homeStars) + '☆'.repeat(5 - state.homeStars);
+  const awayStars = '★'.repeat(state.awayStars) + '☆'.repeat(5 - state.awayStars);
+  document.getElementById('vsHomeStars').textContent = homeStars;
+  document.getElementById('vsAwayStars').textContent = awayStars;
+}
+
+// ============================================================
+// PREDICTION ENGINE
+// ============================================================
+function runPrediction() {
+  if (!state.homeTeam || !state.awayTeam) {
+    alert('Please select both Home and Away teams!');
+    return;
+  }
+  if (state.homeTeam === state.awayTeam) {
+    alert('Home and Away teams cannot be the same!');
+    return;
+  }
+  if (state.homeStars === 0 || state.awayStars === 0) {
+    alert('Please set star ratings for both teams!');
+    return;
+  }
+
+  const prediction = computePrediction();
+  state.lastPrediction = prediction;
+  displayPrediction(prediction);
+  displayAnalysis(prediction);
+  addToHistory(prediction);
+
+  // Update stats
+  state.stats.total++;
+  if (prediction.trapDetected) state.stats.traps++;
+  if (prediction.underdogRisk) state.stats.underdogs++;
+  if (prediction.overallConfidence >= 70) state.stats.highConf++;
+  state.stats.totalConf += prediction.overallConfidence;
+
+  // Flash
+  if (state.settings.flash) {
+    if (prediction.trapDetected) triggerFlash('red');
+    else triggerFlash('green');
+  }
+
+  showTab('predict');
+}
+
+function computePrediction() {
+  const seeds = generateAllSeeds();
+  const seed = seeds.active;
+  const varIdx = getVarianceIndex(seed);
+  const cycleInfo = getCyclePhase(seeds.ts);
+
+  const league = LEAGUES[state.selectedLeague];
+  const homeTeam = league.teams.find(t => t.code === state.homeTeam);
+  const awayTeam = league.teams.find(t => t.code === state.awayTeam);
+
+  const hStars = state.homeStars;
+  const aStars = state.awayStars;
+
+  // WNt Calculation (Weighted Number)
+  // Base WNt from star rating (1-5 stars → WNt 3-15)
+  const homeBaseWnt = hStars * 3;
+  const awayBaseWnt = aStars * 3;
+
+  // Time-of-day factor
+  const hour = new Date().getHours();
+  const todFactor = getTODFactor(hour);
+
+  // Seed-derived modifier (±20% based on seed)
+  const seedMod = ((seed % 200) - 100) / 500; // -0.2 to +0.2
+
+  // Variance modifier
+  const varMod = state.settings.varianceMode === 'high' ? varIdx * 0.3 :
+                 state.settings.varianceMode === 'low' ? varIdx * 0.1 : varIdx * 0.2;
+
+  // Home advantage
+  const homeAdv = 1.15;
+
+  // ARpt balance factor
+  const arptFactor = getARptFactor(seed);
+
+  const homeWnt = homeBaseWnt * homeAdv * (1 + seedMod + varMod) * todFactor * arptFactor;
+  const awayWnt = awayBaseWnt * (1 - seedMod * 0.5) * todFactor;
+
+  const totalWnt = homeWnt + awayWnt;
+  const homeWinProb = Math.min(0.85, Math.max(0.05, homeWnt / totalWnt));
+  const awayWinProb = Math.min(0.85, Math.max(0.05, awayWnt / totalWnt));
+  const drawProb = Math.max(0.05, 1 - homeWinProb - awayWinProb);
+
+  // Normalize
+  const total = homeWinProb + awayWinProb + drawProb;
+  const hWin = homeWinProb / total;
+  const aWin = awayWinProb / total;
+  const draw = drawProb / total;
+
+  // Determine winner
+  let winner, winnerCode;
+  const roll = (seed % 1000) / 1000;
+  if (roll < hWin) { winner = 'Home Win'; winnerCode = 'H'; }
+  else if (roll < hWin + draw) { winner = 'Draw'; winnerCode = 'D'; }
+  else { winner = 'Away Win'; winnerCode = 'A'; }
+
+  // Goal calculation
+  const starDiff = hStars - aStars;
+  const baseGoals = 2.0 + Math.abs(starDiff) * 0.3 + varIdx * 1.5;
+  const homeXG = Math.max(0.3, (homeWnt / totalWnt) * baseGoals * (1 + varMod));
+  const awayXG = Math.max(0.3, (awayWnt / totalWnt) * baseGoals * (1 + varMod * 0.5));
+  const totalXG = homeXG + awayXG;
+
+  // Over/Under
+  const over15Prob = Math.min(0.95, 0.55 + totalXG * 0.1);
+  const over25Prob = Math.min(0.90, 0.35 + totalXG * 0.12);
+  const over35Prob = Math.min(0.80, 0.20 + totalXG * 0.08);
+
+  let overMarket, overProb;
+  if (totalXG > 3.5) { overMarket = 'Over 3.5'; overProb = over35Prob; }
+  else if (totalXG > 2.5) { overMarket = 'Over 2.5'; overProb = over25Prob; }
+  else { overMarket = 'Over 1.5'; overProb = over15Prob; }
+
+  // BTTS
+  const bttsProb = Math.min(0.90, Math.max(0.10,
+    (homeXG > 0.8 ? 0.5 : 0.3) + (awayXG > 0.8 ? 0.3 : 0.1) + varIdx * 0.2
+  ));
+  const btts = bttsProb > 0.5 ? 'YES' : 'NO';
+
+  // Exact scores
+  const scores = computeExactScores(homeXG, awayXG, seed, winnerCode);
+
+  // Trap detection
+  const trapResult = detectTrap(seed, hStars, aStars, varIdx, cycleInfo, hWin, aWin);
+
+  // Underdog detection
+  const underdogResult = detectUnderdog(hStars, aStars, hWin, aWin, seed, varIdx);
+
+  // Form patterns
+  const homeForm = generateForm(seed, hStars, 'home');
+  const awayForm = generateForm(seed + 1000, aStars, 'away');
+
+  // Scoring form
+  const homeScoringForm = analyzeScoringForm(homeForm);
+  const awayScoringForm = analyzeScoringForm(awayForm);
+
+  // Overall confidence
+  const winConf = Math.round(Math.max(hWin, aWin, draw) * 100);
+  const overConf = Math.round(overProb * 100);
+  const bttsConf = Math.round(bttsProb * 100);
+  const scoreConf = Math.round(scores[0].prob * 100);
+  const overallConf = Math.round((winConf + overConf + bttsConf) / 3);
+
+  return {
+    timestamp: Date.now(),
+    league: league.name,
+    homeTeam, awayTeam,
+    homeStars: hStars, awayStars: aStars,
+    seed, seeds, varIdx, cycleInfo,
+    homeWnt: homeWnt.toFixed(2), awayWnt: awayWnt.toFixed(2),
+    wntDiff: (homeWnt - awayWnt).toFixed(2),
+    homeWinProb: hWin, awayWinProb: aWin, drawProb: draw,
+    winner, winnerCode,
+    homeXG: homeXG.toFixed(2), awayXG: awayXG.toFixed(2), totalXG: totalXG.toFixed(2),
+    overMarket, overProb,
+    btts, bttsProb,
+    scores,
+    trapDetected: trapResult.detected, trapInfo: trapResult,
+    underdogRisk: underdogResult.risk, underdogInfo: underdogResult,
+    homeForm, awayForm, homeScoringForm, awayScoringForm,
+    winConf, overConf, bttsConf, scoreConf, overallConf,
+    todFactor, arptFactor, hour,
+    starDiff
+  };
+}
+
+function getTODFactor(hour) {
+  // Time-of-day modulation as per report
+  if (hour >= 6 && hour < 12) return 1.05;   // Morning: slightly home-favored
+  if (hour >= 12 && hour < 18) return 1.00;  // Afternoon: neutral
+  if (hour >= 18 && hour < 22) return 0.98;  // Evening: slight away boost
+  return 1.02;                                 // Night: home advantage
+}
+
+function getARptFactor(seed) {
+  // ARpt (Allocated Result Percentage) seasonal balance correction
+  if (!state.settings.arpt) return 1.0;
+  const v = seed % 100;
+  if (v < 20) return 1.10;  // Home correction
+  if (v < 40) return 1.05;
+  if (v < 60) return 1.00;
+  if (v < 80) return 0.95;
+  return 0.90;               // Away correction
+}
+
+function computeExactScores(homeXG, awayXG, seed, winnerCode) {
+  const scores = [];
+  const maxGoals = 6;
+
+  // Poisson-like probability distribution
+  function factorial(n) {
+    if (n <= 1) return 1;
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+
+  function poisson(lambda, k) {
+    return (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
+  }
+
+  for (let h = 0; h <= maxGoals; h++) {
+    for (let a = 0; a <= maxGoals; a++) {
+      let prob = poisson(parseFloat(homeXG), h) * poisson(parseFloat(awayXG), a);
+
+      // Bias toward predicted winner
+      if (winnerCode === 'H' && h > a) prob *= 1.3;
+      else if (winnerCode === 'A' && a > h) prob *= 1.3;
+      else if (winnerCode === 'D' && h === a) prob *= 1.4;
+
+      // Seed-based micro-adjustment
+      const seedAdj = 1 + ((seed % 100) - 50) / 500;
+      prob *= seedAdj;
+
+      scores.push({ score: `${h}-${a}`, h, a, prob });
+    }
+  }
+
+  // Normalize
+  const total = scores.reduce((s, x) => s + x.prob, 0);
+  scores.forEach(s => s.prob = s.prob / total);
+
+  // Sort by probability
+  scores.sort((a, b) => b.prob - a.prob);
+
+  return scores.slice(0, 12);
+}
+
+function detectTrap(seed, hStars, aStars, varIdx, cycleInfo, hWin, aWin) {
+  const sensitivity = state.settings.trapSensitivity;
+  const threshold = sensitivity === 'high' ? 0.3 : sensitivity === 'low' ? 0.15 : 0.22;
+
+  const traps = [];
+  let trapScore = 0;
+
+  // Trap 1: Seed in danger zone (high variance + cycle end)
+  if (varIdx > 0.75 && cycleInfo.phaseNum >= 8) {
+    traps.push('Seed in high-variance danger zone near cycle end');
+    trapScore += 3;
+  }
+
+  // Trap 2: Extreme favorite (odds trap)
+  if (hWin > 0.75 || aWin > 0.75) {
+    traps.push('Extreme favorite — potential odds trap (bookmaker edge)');
+    trapScore += 2;
+  }
+
+  // Trap 3: Star mismatch with seed
+  const seedMod = (seed % 200) / 200;
+  if (Math.abs(hStars - aStars) >= 3 && seedMod > 0.6) {
+    traps.push('Star mismatch with seed variance — upset risk elevated');
+    trapScore += 2;
+  }
+
+  // Trap 4: ARpt correction phase
+  const arptV = seed % 100;
+  if (arptV > 80) {
+    traps.push('ARpt correction phase active — seasonal balance may override prediction');
+    trapScore += 2;
+  }
+
+  // Trap 5: Low cycle phase (early cycle instability)
+  if (cycleInfo.phaseNum <= 2) {
+    traps.push('Early cycle phase — RNG initialization instability possible');
+    trapScore += 1;
+  }
+
+  // Trap 6: Very high variance
+  if (varIdx > 0.85) {
+    traps.push('Extreme variance index — high outcome unpredictability');
+    trapScore += 2;
+  }
+
+  const detected = trapScore >= (sensitivity === 'high' ? 2 : sensitivity === 'low' ? 5 : 3);
+
+  return {
+    detected,
+    trapScore,
+    traps,
+    riskLevel: trapScore >= 6 ? 'EXTREME' : trapScore >= 4 ? 'HIGH' : trapScore >= 2 ? 'MEDIUM' : 'LOW'
+  };
+}
+
+function detectUnderdog(hStars, aStars, hWin, aWin, seed, varIdx) {
+  if (!state.settings.underdog) return { risk: false, info: '' };
+
+  const starDiff = Math.abs(hStars - aStars);
+  const seedFactor = (seed % 300) / 300;
+  const underdogRisk = starDiff >= 2 && (varIdx > 0.5 || seedFactor > 0.65);
+
+  const reasons = [];
+  if (starDiff >= 3) reasons.push(`Large star gap (${starDiff} stars) — underdog has upset history`);
+  if (varIdx > 0.6) reasons.push(`High variance index (${(varIdx*100).toFixed(0)}%) — volatile outcome expected`);
+  if (seedFactor > 0.7) reasons.push('Seed factor favors upset scenario');
+  if (hStars < aStars && hWin > 0.4) reasons.push('Home underdog showing strong WNt — potential home upset');
+  if (aStars < hStars && aWin > 0.35) reasons.push('Away underdog showing resilient WNt — away upset possible');
+
+  return {
+    risk: underdogRisk,
+    starDiff,
+    seedFactor: seedFactor.toFixed(3),
+    reasons,
+    upsetProbability: underdogRisk ? Math.round((varIdx * 0.4 + seedFactor * 0.3) * 100) : 0
+  };
+}
+
+function generateForm(seed, stars, side) {
+  const form = [];
+  let s = seed;
+  for (let i = 0; i < 5; i++) {
+    s = (s * 1664525 + 1013904223) % Math.pow(2, 32);
+    const v = s % 100;
+    // Higher stars = more wins
+    const winThreshold = 30 + stars * 8;
+    const drawThreshold = winThreshold + 25;
+    if (v < winThreshold) form.push('W');
+    else if (v < drawThreshold) form.push('D');
+    else form.push('L');
+  }
+  return form;
+}
+
+function analyzeScoringForm(form) {
+  const wins = form.filter(f => f === 'W').length;
+  const recent = form.slice(-3);
+  const recentWins = recent.filter(f => f === 'W').length;
+
+  if (recentWins >= 2 && wins >= 3) return { status: 'hot', label: '🔥 HOT SCORING FORM', class: 'hot' };
+  if (wins <= 1) return { status: 'cold', label: '❄️ COLD SCORING FORM', class: 'cold' };
+  return { status: 'normal', label: '📊 NORMAL FORM', class: 'normal' };
+}
+
+// ============================================================
+// DISPLAY PREDICTION
+// ============================================================
+function displayPrediction(p) {
+  // Show results
+  document.getElementById('predictEmpty').style.display = 'none';
+  document.getElementById('predictResults').style.display = 'block';
+  document.getElementById('analysisEmpty').style.display = 'none';
+  document.getElementById('analysisResults').style.display = 'block';
+
+  // Match header
+  document.getElementById('res_home').textContent = p.homeTeam.code;
+  document.getElementById('res_away').textContent = p.awayTeam.code;
+  document.getElementById('res_homeStars').textContent = '★'.repeat(p.homeStars) + '☆'.repeat(5-p.homeStars);
+  document.getElementById('res_awayStars').textContent = '★'.repeat(p.awayStars) + '☆'.repeat(5-p.awayStars);
+  document.getElementById('res_league').textContent = p.league;
+  document.getElementById('res_seed_badge').textContent = `SEED: ${p.seed.toString().slice(-6)}`;
+
+  const confClass = p.overallConf >= 70 ? 'green' : p.overallConf >= 50 ? 'blue' : 'warn';
+  const confBadge = document.getElementById('res_confidence_badge');
+  confBadge.textContent = `CONF: ${p.overallConf}%`;
+  confBadge.className = `badge ${confClass}`;
+
+  // Trap alert
+  const trapAlert = document.getElementById('trapAlert');
+  if (p.trapDetected) {
+    trapAlert.classList.add('show');
+    document.getElementById('trapAlertBody').innerHTML =
+      `<strong>Risk Level: ${p.trapInfo.riskLevel}</strong><br>` +
+      p.trapInfo.traps.map(t => `• ${t}`).join('<br>');
+  } else {
+    trapAlert.classList.remove('show');
+  }
+
+  // Underdog alert
+  const underdogAlert = document.getElementById('underdogAlert');
+  if (p.underdogRisk) {
+    underdogAlert.classList.add('show');
+    document.getElementById('underdogAlertBody').innerHTML =
+      `<strong>Upset Probability: ~${p.underdogInfo.upsetProbability}%</strong><br>` +
+      p.underdogInfo.reasons.map(r => `• ${r}`).join('<br>');
+  } else {
+    underdogAlert.classList.remove('show');
+  }
+
+  // Prediction cards
+  document.getElementById('pred_win').textContent = p.winner;
+  document.getElementById('pred_win_conf').textContent = `${p.winConf}% confidence`;
+  document.getElementById('pred_win_bar').style.width = p.winConf + '%';
+
+  document.getElementById('pred_over').textContent = p.overMarket;
+  document.getElementById('pred_over_conf').textContent = `${p.overConf}% confidence`;
+  document.getElementById('pred_over_bar').style.width = p.overConf + '%';
+
+  document.getElementById('pred_btts').textContent = `BTTS: ${p.btts}`;
+  document.getElementById('pred_btts_conf').textContent = `${p.bttsConf}% confidence`;
+  document.getElementById('pred_btts_bar').style.width = p.bttsConf + '%';
+
+  document.getElementById('pred_score').textContent = p.scores[0].score;
+  document.getElementById('pred_score_conf').textContent = `${p.scoreConf}% probability`;
+  document.getElementById('pred_score_bar').style.width = Math.min(100, p.scoreConf * 3) + '%';
+
+  // Confidence meters
+  setTimeout(() => {
+    setConfMeter('conf_win', 'conf_win_pct', p.winConf);
+    setConfMeter('conf_over', 'conf_over_pct', p.overConf);
+    setConfMeter('conf_btts', 'conf_btts_pct', p.bttsConf);
+    setConfMeter('conf_score', 'conf_score_pct', p.scoreConf);
+  }, 100);
+
+  // Score grid
+  const scoreGrid = document.getElementById('scoreGrid');
+  scoreGrid.innerHTML = '';
+  p.scores.slice(0, 9).forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'score-item' + (i === 0 ? ' top' : '');
+    const pct = Math.round(s.prob * 100);
+    div.innerHTML = `
+      <div class="score-val">${s.score}</div>
+      <div class="score-prob">${pct}%</div>
+      <div class="score-bar"><div class="score-bar-fill" style="width:${Math.min(100, pct*3)}%"></div></div>
+    `;
+    scoreGrid.appendChild(div);
+  });
+
+  // Form patterns
+  document.getElementById('homeFormTitle').textContent = `${p.homeTeam.code} Form (Last 5)`;
+  document.getElementById('awayFormTitle').textContent = `${p.awayTeam.code} Form (Last 5)`;
+
+  displayForm('homeForm', p.homeForm);
+  displayForm('awayForm', p.awayForm);
+
+  document.getElementById('homeFormBadge').innerHTML =
+    `<span class="scoring-form-badge ${p.homeScoringForm.class}">${p.homeScoringForm.label}</span>`;
+  document.getElementById('awayFormBadge').innerHTML =
+    `<span class="scoring-form-badge ${p.awayScoringForm.class}">${p.awayScoringForm.label}</span>`;
+}
+
+function setConfMeter(barId, pctId, value) {
+  const bar = document.getElementById(barId);
+  const pct = document.getElementById(pctId);
+  if (bar) bar.style.width = value + '%';
+  if (pct) pct.textContent = value + '%';
+}
+
+function displayForm(containerId, form) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  form.forEach(f => {
+    const badge = document.createElement('div');
+    badge.className = `form-badge ${f}`;
+    badge.textContent = f;
+    container.appendChild(badge);
+  });
+}
+
+// ============================================================
+// DISPLAY ANALYSIS
+// ============================================================
+function displayAnalysis(p) {
+  // Seed analysis
+  document.getElementById('analysis_seed').innerHTML =
+    `The seed estimator generated <strong>${p.seed}</strong> using the <strong>${state.settings.lcgVariant.replace('_',' ')}</strong> LCG variant at timestamp <strong>${p.seeds.ts}</strong>. ` +
+    `Variance index: <strong>${(p.varIdx*100).toFixed(1)}%</strong>. ` +
+    `Cycle phase: <strong>${p.cycleInfo.phaseNum}/10</strong> (${p.cycleInfo.pct}% through current 3-minute cycle). ` +
+    `The PRNG uses timestamp-millisecond scaling with LCG transformation: <em>seed = (a × ts + c) mod m</em>.`;
+
+  // Trap analysis
+  if (p.trapDetected) {
+    document.getElementById('analysis_trap').innerHTML =
+      `<strong style="color:var(--red)">⚠️ ${p.trapInfo.riskLevel} RISK DETECTED</strong><br>` +
+      `Trap score: ${p.trapInfo.trapScore}/10<br><br>` +
+      p.trapInfo.traps.map(t => `• ${t}`).join('<br>');
+  } else {
+    document.getElementById('analysis_trap').innerHTML =
+      `<strong style="color:var(--green)">✅ No significant traps detected.</strong> ` +
+      `Trap score: ${p.trapInfo.trapScore}/10. The current seed, variance, and cycle phase do not indicate elevated risk patterns. ` +
+      `Proceed with normal confidence assessment.`;
+  }
+
+  // Underdog analysis
+  if (p.underdogRisk) {
+    document.getElementById('analysis_underdog').innerHTML =
+      `<strong style="color:var(--gold)">⚡ Underdog upset potential identified.</strong><br>` +
+      `Star differential: ${p.underdogInfo.starDiff} stars | Seed factor: ${p.underdogInfo.seedFactor}<br>` +
+      `Estimated upset probability: <strong>~${p.underdogInfo.upsetProbability}%</strong><br><br>` +
+      p.underdogInfo.reasons.map(r => `• ${r}`).join('<br>');
+  } else {
+    document.getElementById('analysis_underdog').innerHTML =
+      `<strong style="color:var(--green)">✅ No significant underdog upset risk.</strong> ` +
+      `Star differential of ${Math.abs(p.starDiff)} with current variance (${(p.varIdx*100).toFixed(0)}%) does not suggest upset conditions. ` +
+      `The favorite's WNt advantage is likely to hold.`;
+  }
+
+  // Variance analysis
+  const varPct = Math.round(p.varIdx * 100);
+  const varLevel = varPct > 75 ? 'EXTREME' : varPct > 50 ? 'HIGH' : varPct > 25 ? 'MEDIUM' : 'LOW';
+  document.getElementById('analysis_variance').innerHTML =
+    `Variance Index: <strong>${varPct}%</strong> — <strong>${varLevel}</strong><br>` +
+    `Mode: <strong>${state.settings.varianceMode}</strong><br>` +
+    `High variance indicates the RNG seed is in a region of the PRNG sequence where outcome spread is maximized. ` +
+    `${varPct > 60 ? 'Consider reducing bet size or avoiding exotic markets.' : 'Variance is manageable for standard markets.'}`;
+  document.getElementById('variance_bar').style.width = varPct + '%';
+  document.getElementById('variance_bar').style.background =
+    varPct > 75 ? 'var(--red)' : varPct > 50 ? 'var(--warn)' : 'var(--purple)';
+  document.getElementById('variance_label').textContent = `${varLevel} variance (${varPct}%)`;
+
+  // WNt analysis
+  document.getElementById('analysis_wnt').innerHTML =
+    `WNt (Weighted Number) represents the AI-computed strength value for each team. ` +
+    `Home WNt: <strong>${p.homeWnt}</strong> | Away WNt: <strong>${p.awayWnt}</strong><br>` +
+    `Differential: <strong>${p.wntDiff}</strong>. ` +
+    `${parseFloat(p.homeWnt) > parseFloat(p.awayWnt) ? 'Home team dominates the WNt calculation.' : 'Away team has WNt advantage.'}`;
+
+  document.getElementById('wnt_home').textContent = p.homeWnt;
+  document.getElementById('wnt_away').textContent = p.awayWnt;
+  document.getElementById('wnt_diff').textContent = p.wntDiff;
+  const domFactor = (parseFloat(p.homeWnt) / (parseFloat(p.homeWnt) + parseFloat(p.awayWnt)) * 100).toFixed(1);
+  document.getElementById('wnt_dom').textContent = `${domFactor}% Home`;
+  document.getElementById('wnt_dom').className = `indicator-value ${parseFloat(domFactor) > 50 ? 'positive' : 'negative'}`;
+
+  // ARpt analysis
+  document.getElementById('analysis_arpt').innerHTML =
+    `ARpt (Allocated Result Percentage) is the seasonal balance mechanism. Factor: <strong>${p.arptFactor.toFixed(3)}</strong><br>` +
+    `${p.arptFactor > 1.05 ? '🔴 ARpt is correcting toward home wins — home team boosted.' :
+       p.arptFactor < 0.95 ? '🔵 ARpt is correcting toward away wins — away team boosted.' :
+       '🟢 ARpt is balanced — no seasonal correction active.'}<br>` +
+    `The ARpt mechanism ensures the platform maintains realistic win/draw/loss distributions over extended play periods.`;
+
+  // Goal analysis
+  document.getElementById('analysis_goals').innerHTML =
+    `Expected Goals model based on WNt differential and variance. ` +
+    `Home xG: <strong>${p.homeXG}</strong> | Away xG: <strong>${p.awayXG}</strong> | Total xG: <strong>${p.totalXG}</strong><br>` +
+    `Recommended market: <strong>${p.overMarket}</strong> (${p.overConf}% confidence)`;
+
+  document.getElementById('xg_home').textContent = p.homeXG;
+  document.getElementById('xg_away').textContent = p.awayXG;
+  document.getElementById('xg_total').textContent = p.totalXG;
+
+  const o25p = Math.round(p.overProb * 100);
+  const o25el = document.getElementById('over25_prob');
+  o25el.textContent = o25p + '%';
+  o25el.className = `indicator-value ${o25p > 60 ? 'positive' : o25p > 40 ? 'neutral' : 'negative'}`;
+
+  const bttsEl = document.getElementById('btts_prob');
+  bttsEl.textContent = p.bttsConf + '%';
+  bttsEl.className = `indicator-value ${p.bttsConf > 60 ? 'positive' : p.bttsConf > 40 ? 'neutral' : 'negative'}`;
+
+  // Time-of-day
+  const todDesc = p.hour >= 6 && p.hour < 12 ? 'Morning session — slight home advantage boost' :
+                  p.hour >= 12 && p.hour < 18 ? 'Afternoon session — neutral conditions' :
+                  p.hour >= 18 && p.hour < 22 ? 'Evening session — slight away boost' :
+                  'Night session — home advantage active';
+  document.getElementById('analysis_tod').innerHTML =
+    `Current hour: <strong>${p.hour}:00</strong> — ${todDesc}<br>` +
+    `TOD Factor: <strong>${p.todFactor.toFixed(3)}</strong><br>` +
+    `The time-of-day factor modulates the WNt calculation based on documented platform behavior patterns.`;
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function addToHistory(p) {
+  state.history.unshift(p);
+  if (state.history.length > 20) state.history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (state.history.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No predictions yet.</p></div>';
+    document.getElementById('historyStats').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('historyStats').style.display = 'block';
+
+  list.innerHTML = state.history.map(p => `
+    <div class="history-item">
+      <div class="history-teams">
+        <div>${p.homeTeam.code} vs ${p.awayTeam.code}</div>
+        <div style="font-size:10px; color:var(--text2);">${new Date(p.timestamp).toLocaleTimeString()}</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:var(--text2);">${p.winner}</div>
+        <div style="font-size:11px; color:var(--text2);">${p.scores[0].score}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="badge ${p.overallConf >= 70 ? 'green' : p.overallConf >= 50 ? 'blue' : 'warn'}">${p.overallConf}%</div>
+        ${p.trapDetected ? '<div class="badge red" style="margin-top:3px;">TRAP</div>' : ''}
+        ${p.underdogRisk ? '<div class="badge gold" style="margin-top:3px;">UPSET</div>' : ''}
+      </div>
+    </div>
+  `).join('');
+
+  // Stats
+  document.getElementById('stat_total').textContent = state.stats.total;
+  document.getElementById('stat_traps').textContent = state.stats.traps;
+  document.getElementById('stat_underdog').textContent = state.stats.underdogs;
+  document.getElementById('stat_highconf').textContent = state.stats.highConf;
+  const avgConf = state.stats.total > 0 ?
+    Math.round(state.stats.totalConf / state.stats.total) : 0;
+  document.getElementById('stat_avgconf').textContent = avgConf + '%';
+}
+
+function clearHistory() {
+  state.history = [];
+  state.stats = { total: 0, traps: 0, underdogs: 0, highConf: 0, totalConf: 0 };
+  renderHistory();
+}
+
+// ============================================================
+// SCANNER
+// ============================================================
+function startScanner() {
+  if (!state.homeTeam || !state.awayTeam) {
+    addScanLog('error', 'ERROR: Select teams before scanning!');
+    return;
+  }
+  if (state.homeStars === 0 || state.awayStars === 0) {
+    addScanLog('error', 'ERROR: Set star ratings before scanning!');
+    return;
+  }
+
+  state.scannerRunning = true;
+  state.scanProgress = 0;
+  document.getElementById('scannerStatus').className = 'scanner-status scanning';
+  document.getElementById('scannerStatus').textContent = 'SCANNING';
+  document.getElementById('scanProgress').className = 'progress-bar';
+  document.getElementById('scanProgress').style.width = '0%';
+
+  addScanLog('info', `[SCAN] Starting scan: ${state.homeTeam} vs ${state.awayTeam}`);
+  addScanLog('info', `[SCAN] Stars: ${state.homeStars}★ vs ${state.awayStars}★`);
+  addScanLog('info', `[SCAN] LCG: ${state.settings.lcgVariant} | Sensitivity: ${state.settings.trapSensitivity}`);
+
+  const speeds = { fast: 80, normal: 150, slow: 250 };
+  const interval = speeds[state.settings.scanSpeed] || 150;
+
+  let iteration = 0;
+  const maxIterations = 100;
+
+  state.scannerInterval = setInterval(() => {
+    if (!state.scannerRunning) {
+      clearInterval(state.scannerInterval);
+      return;
+    }
+
+    iteration++;
+    state.scanProgress = (iteration / maxIterations) * 100;
+
+    const seeds = generateAllSeeds();
+    const varIdx = getVarianceIndex(seeds.active);
+    const cycleInfo = getCyclePhase(seeds.ts);
+    const p = computePrediction();
+
+    // Update progress
+    document.getElementById('scanProgress').style.width = state.scanProgress + '%';
+    document.getElementById('scanPct').textContent = Math.round(state.scanProgress) + '%';
+    document.getElementById('scanCount').textContent = `${iteration}/${maxIterations}`;
+    document.getElementById('scanCondition').
+textContent = `Analyzing seed ${seeds.active.toString().slice(-6)}...`;
+
+    // Update scan conditions
+    updateScanConditions(p, seeds, varIdx, cycleInfo);
+
+    // Periodic log updates
+    if (iteration % 10 === 0) {
+      addScanLog('info', `[${iteration}] Seed: ${seeds.active.toString().slice(-6)} | VAR: ${(varIdx*100).toFixed(0)}% | Phase: ${cycleInfo.phaseNum}/10`);
+    }
+
+    // Check conditions
+    const conditionsMet = checkScanConditions(p, varIdx, cycleInfo);
+
+    if (conditionsMet.bet) {
+      // BET CONDITION MET
+      clearInterval(state.scannerInterval);
+      state.scannerRunning = false;
+
+      document.getElementById('scannerStatus').className = 'scanner-status found';
+      document.getElementById('scannerStatus').textContent = 'BET FOUND!';
+      document.getElementById('scanProgress').className = 'progress-bar green';
+      document.getElementById('scanProgress').style.width = '100%';
+      document.getElementById('scanCondition').textContent = '✅ CONDITIONS MET!';
+
+      addScanLog('success', `[✅ BET SIGNAL] ${conditionsMet.reason}`);
+      addScanLog('success', `[✅] Winner: ${p.winner} | ${p.overMarket} | BTTS: ${p.btts}`);
+      addScanLog('success', `[✅] Confidence: ${p.overallConf}% | Score: ${p.scores[0].score}`);
+
+      if (state.settings.flash) triggerFlash('green');
+
+      state.lastPrediction = p;
+      displayPrediction(p);
+      displayAnalysis(p);
+      addToHistory(p);
+
+    } else if (conditionsMet.trap) {
+      // TRAP DETECTED
+      addScanLog('trap', `[⚠️ TRAP] ${conditionsMet.trapReason} — skipping`);
+      document.getElementById('scanProgress').className = 'progress-bar red';
+      setTimeout(() => {
+        document.getElementById('scanProgress').className = 'progress-bar';
+      }, 500);
+
+      if (state.settings.flash) triggerFlash('red');
+
+    } else if (iteration >= maxIterations) {
+      // Scan complete - show best result
+      clearInterval(state.scannerInterval);
+      state.scannerRunning = false;
+
+      document.getElementById('scannerStatus').className = 'scanner-status idle';
+      document.getElementById('scannerStatus').textContent = 'COMPLETE';
+      document.getElementById('scanProgress').style.width = '100%';
+      document.getElementById('scanCondition').textContent = 'Scan complete';
+
+      addScanLog('warn', '[SCAN] Scan complete. Showing best available prediction.');
+      addScanLog('info', `[RESULT] ${p.winner} | ${p.overMarket} | BTTS: ${p.btts} | ${p.overallConf}% conf`);
+
+      state.lastPrediction = p;
+      displayPrediction(p);
+      displayAnalysis(p);
+      addToHistory(p);
+    }
+
+  }, interval);
+}
+
+function stopScanner() {
+  if (state.scannerInterval) clearInterval(state.scannerInterval);
+  state.scannerRunning = false;
+  document.getElementById('scannerStatus').className = 'scanner-status idle';
+  document.getElementById('scannerStatus').textContent = 'STOPPED';
+  document.getElementById('scanCondition').textContent = 'Scan stopped by user';
+  addScanLog('warn', '[SCAN] Scanner stopped by user.');
+}
+
+function checkScanConditions(p, varIdx, cycleInfo) {
+  // Conditions for BET signal
+  const betConditions = [
+    p.overallConf >= 65,
+    !p.trapDetected,
+    varIdx < 0.7,
+    cycleInfo.phaseNum >= 3 && cycleInfo.phaseNum <= 8,
+    p.winConf >= 55
+  ];
+
+  const metCount = betConditions.filter(Boolean).length;
+  const bet = metCount >= 4;
+
+  // Trap conditions
+  const trap = p.trapDetected && p.trapInfo.trapScore >= 4;
+  const trapReason = trap ? p.trapInfo.traps[0] : '';
+
+  return {
+    bet,
+    metCount,
+    reason: bet ? `${metCount}/5 conditions met — ${p.winner} @ ${p.overallConf}% confidence` : '',
+    trap,
+    trapReason
+  };
+}
+
+function updateScanConditions(p, seeds, varIdx, cycleInfo) {
+  const setCondition = (id, met, text) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = `indicator-value ${met ? 'positive' : 'negative'}`;
+  };
+
+  setCondition('sc_seed', varIdx < 0.6, `${(varIdx*100).toFixed(0)}% ${varIdx < 0.6 ? '✓' : '✗'}`);
+  setCondition('sc_var', varIdx < 0.7, varIdx < 0.7 ? 'OK ✓' : 'HIGH ✗');
+  setCondition('sc_trap', !p.trapDetected, p.trapDetected ? `TRAP ✗` : 'CLEAR ✓');
+  setCondition('sc_star', Math.abs(p.homeStars - p.awayStars) <= 2, `Δ${Math.abs(p.homeStars - p.awayStars)}★`);
+  setCondition('sc_form', p.homeScoringForm.status !== 'cold' || p.awayScoringForm.status !== 'cold',
+    p.homeScoringForm.status === 'hot' || p.awayScoringForm.status === 'hot' ? 'HOT ✓' : 'NORMAL');
+  setCondition('sc_cycle', cycleInfo.phaseNum >= 3 && cycleInfo.phaseNum <= 8,
+    `Phase ${cycleInfo.phaseNum} ${cycleInfo.phaseNum >= 3 && cycleInfo.phaseNum <= 8 ? '✓' : '✗'}`);
+  setCondition('sc_underdog', !p.underdogRisk, p.underdogRisk ? 'RISK ✗' : 'LOW ✓');
+
+  const overallMet = !p.trapDetected && varIdx < 0.7 && p.overallConf >= 60;
+  const overallEl = document.getElementById('sc_overall');
+  if (overallEl) {
+    overallEl.textContent = overallMet ? `BET ✓ ${p.overallConf}%` : `WAIT ${p.overallConf}%`;
+    overallEl.className = `indicator-value ${overallMet ? 'positive' : 'warn'}`;
+  }
+}
+
+function addScanLog(type, message) {
+  const log = document.getElementById('scannerLog');
+  const line = document.createElement('div');
+  line.className = `log-line log-${type}`;
+  const time = new Date().toLocaleTimeString('en-US', {hour12: false});
+  line.textContent = `[${time}] ${message}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+
+  // Keep log manageable
+  while (log.children.length > 100) {
+    log.removeChild(log.firstChild);
+  }
+}
+
+// ============================================================
+// FLASH EFFECT
+// ============================================================
+function triggerFlash(color) {
+  const overlay = document.getElementById('flashOverlay');
+  overlay.className = `flash-overlay ${color}`;
+  overlay.classList.add('show');
+  setTimeout(() => overlay.classList.remove('show'), 400);
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function updateSettings() {
+  state.settings.lcgVariant = document.getElementById('lcgVariant').value;
+  state.settings.trapSensitivity = document.getElementById('trapSensitivity').value;
+  state.settings.varianceMode = document.getElementById('varianceMode').value;
+  state.settings.scanSpeed = document.getElementById('scanSpeed').value;
+}
+
+function toggleSetting(key) {
+  state.settings[key] = !state.settings[key];
+  const el = document.getElementById(`toggle_${key}`);
+  if (el) el.classList.toggle('on', state.settings[key]);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  populateTeams();
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Initialize cycle dots
+  updateCycleDots(1);
+
+  // Set initial scan conditions to idle state
+  ['sc_seed','sc_var','sc_trap','sc_star','sc_form','sc_cycle','sc_underdog'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = 'Waiting...'; el.className = 'indicator-value neutral'; }
+  });
+
+  addScanLog('info', '[SYSTEM] VFL Predictor Pro v2.0 loaded successfully');
+  addScanLog('info', '[SYSTEM] Seed estimator active — PRNG timestamp-based');
+  addScanLog('info', '[SYSTEM] Select teams and stars, then start scanner or predict directly');
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

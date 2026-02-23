@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>⚡ SportyBet · mobile time + progress</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Roboto,system-ui,sans-serif; }
+    body { background:#0a1c2b; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:16px 12px 30px; }
+    .phone-frame { max-width:450px; width:100%; background:#112b3c; border-radius:48px 48px 30px 30px; padding:24px 18px 32px; box-shadow:0 20px 40px rgba(0,0,0,0.8),0 0 0 3px #23648b inset; border:1px solid #4797c5; }
+    h1 { font-size:2.1rem; font-weight:800; background:linear-gradient(145deg,#ffe17c,#6dc6ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    h1 span { font-size:0.9rem; background:#173f5c; color:#cde1ff; padding:6px 14px; border-radius:40px; -webkit-text-fill-color:#cde1ff; border:1px solid #3a8bb9; }
+    .time-row { display:flex; justify-content:space-between; align-items:center; background:#0b2537; padding:12px 18px; border-radius:50px; margin:10px 0 15px; border:1px solid #2c6f99; }
+    .phone-time { font-size:1.8rem; font-weight:700; color:#ffea9e; letter-spacing:3px; font-family:'Courier New',monospace; }
+    .seed-label { color:#a0c9ec; font-size:0.9rem; }
+    .league-strip { display:flex; flex-wrap:wrap; gap:8px; background:#0e2637; padding:14px 12px; border-radius:50px; margin:20px 0 18px; border:1px solid #2f6991; justify-content:center; }
+    .league-btn { background:#1f405b; color:#c6e2ff; font-weight:600; padding:8px 16px; border-radius:40px; font-size:0.8rem; border:1px solid transparent; transition:0.15s; cursor:pointer; white-space:nowrap; }
+    .league-btn.active { background:#2a6fa5; color:white; border-color:#ffd966; box-shadow:0 0 10px #1e88e5; }
+    .selector-block { background:#0b1f30; border-radius:40px; padding:18px 16px; border:1px solid #2e6f9a; margin-bottom:18px; }
+    .team-picker { margin-bottom:20px; }
+    .team-picker label { font-size:1.1rem; font-weight:600; color:#b8defa; letter-spacing:0.5px; margin-left:8px; }
+    select { width:100%; padding:16px 20px; background:#123b52; border:2px solid #2c79b0; border-radius:60px; color:white; font-weight:600; font-size:1.1rem; appearance:none; background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%237ac4ff" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>'); background-repeat:no-repeat; background-position:right 18px center; margin-top:8px; }
+    .star-row { display:flex; align-items:center; gap:16px; margin-top:14px; flex-wrap:wrap; }
+    .star-btn { background:#1e4f72; border:1px solid #5fa9da; border-radius:60px; padding:10px 24px; color:#ffe48f; font-weight:700; font-size:1.1rem; display:inline-flex; align-items:center; gap:10px; cursor:pointer; transition:0.2s; }
+    .star-btn.active { background:#f0b73e; color:#0a1f2e; border-color:#fff1b5; box-shadow:0 0 15px #fd0; }
+    .star-icon { font-size:1.8rem; line-height:1; }
+    .star-indicator { color:gold; font-size:1.2rem; font-weight:600; }
+    .control-panel { background:#0d2538; border-radius:60px; padding:20px 16px; border:1px solid #3682b3; margin:10px 0 20px; }
+    .flash-area { display:flex; align-items:center; gap:18px; margin-bottom:20px; flex-wrap:wrap; }
+    .flashlight { width:70px; height:70px; border-radius:50%; background:#2b2b2b; border:4px solid white; transition:0.1s; box-shadow:0 0 20px black; }
+    .flashlight.green { background:#2ecc71; box-shadow:0 0 50px #27f07b; }
+    .flashlight.red { background:#e74c3c; box-shadow:0 0 50px #ff5e5e; }
+    .trap-text { font-weight:700; font-size:1.4rem; color:#eee; }
+    .cond-row { display:flex; align-items:center; flex-wrap:wrap; gap:12px; background:#15475f; padding:12px 16px; border-radius:50px; margin-bottom:18px; }
+    .cond-row label { font-size:1rem; color:#c1dcf5; font-weight:600; }
+    .cond-row select { width:auto; flex:1; min-width:150px; background:#1b608b; border-color:#a0d0ff; padding:12px 30px 12px 16px; font-size:1rem; }
+    .btn-group { display:flex; gap:12px; flex-wrap:wrap; }
+    .btn { background:#236e9e; border:none; color:white; font-weight:800; padding:16px 28px; border-radius:60px; font-size:1.2rem; border:1px solid #7ac4ff; box-shadow:0 5px 0 #0f364b; cursor:pointer; transition:0.1s; flex:1 1 auto; text-align:center; }
+    .btn:active { transform:translateY(3px); box-shadow:0 2px 0 #0f364b; }
+    .btn-stop { background:#862424; border-color:#ff9f9f; }
+    .predict-btn { width:100%; background:#2f7eb3; padding:18px 20px; font-size:1.5rem; margin:10px 0 15px; box-shadow:0 6px 0 #154257; }
+    .progress-container { background:#0d364b; height:16px; border-radius:30px; margin:15px 0 5px; overflow:hidden; border:1px solid #3580af; }
+    .progress-fill { height:100%; width:0%; background:linear-gradient(90deg,#f6d365,#fda085); transition:width 0.1s linear; border-radius:30px; }
+    .cards-stack { display:flex; flex-direction:column; gap:16px; margin:20px 0 10px; }
+    .card { background:#113144; border-radius:40px; padding:22px 20px; border:1px solid #2a7aa5; box-shadow:0 8px 0 #08222f; }
+    .card h3 { font-size:1.6rem; font-weight:700; color:#ffea9e; border-bottom:2px solid #2b7095; padding-bottom:12px; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+    .stat-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #2f698b; font-size:1.2rem; }
+    .stat-row .value { font-weight:800; color:#fcd34d; }
+    .form-badge { display:inline-block; padding:8px 20px; border-radius:40px; font-weight:700; margin:5px 5px 0 0; }
+    .form-good { background:#1c6d3b; color:white; border-left:8px solid #2ecc71; }
+    .form-bad { background:#832525; color:white; border-left:8px solid #e74c3c; }
+    .badge { background:#195072; padding:6px 14px; border-radius:30px; color:#b9e2ff; font-weight:600; font-size:1rem; }
+    .trap-msg { background:#1b3348; border-radius:30px; padding:18px; margin-top:15px; font-size:1.1rem; }
+    .footer { display:flex; justify-content:space-between; color:#5f9bc2; margin-top:30px; font-size:0.85rem; }
+  </style>
+</head>
+<body>
+<div class="phone-frame">
+  <h1>⚡ INSTANT VIRTUAL <span>seed‑LCG</span></h1>
+
+  <div class="time-row">
+    <span class="seed-label">📱 phone time</span>
+    <span class="phone-time" id="phoneClock">--:--</span>
+  </div>
+
+  <div class="league-strip" id="leagueTabs">
+    <div class="league-btn active" data-league="england">🏴 ENG</div>
+    <div class="league-btn" data-league="spain">🇪🇸 ESP</div>
+    <div class="league-btn" data-league="germany">🇩🇪 GER</div>
+    <div class="league-btn" data-league="italy">🇮🇹 ITA</div>
+    <div class="league-btn" data-league="champions">🏆 UCL</div>
+    <div class="league-btn" data-league="african">🌍 AFR</div>
+    <div class="league-btn" data-league="euros">🇪🇺 EURO</div>
+    <div class="league-btn" data-league="clubwc">🌎 CWC</div>
+  </div>
+
+  <div class="selector-block">
+    <div class="team-picker">
+      <label>🏠 HOME</label>
+      <select id="homeTeam"></select>
+      <div class="star-row">
+        <div class="star-btn" id="starHome"><span class="star-icon">☆</span> STAR HOME</div>
+        <span class="star-indicator" id="homeStarInd"></span>
+      </div>
+    </div>
+    <div class="team-picker">
+      <label>✈️ AWAY</label>
+      <select id="awayTeam"></select>
+      <div class="star-row">
+        <div class="star-btn" id="starAway"><span class="star-icon">☆</span> STAR AWAY</div>
+        <span class="star-indicator" id="awayStarInd"></span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn predict-btn" id="predictBtn">🔮 PREDICT NOW</button>
+
+  <div class="control-panel">
+    <div class="flash-area">
+      <div class="flashlight" id="flashlight"></div>
+      <span class="trap-text">TRAP ALERT</span>
+    </div>
+    <div class="cond-row">
+      <label>⏱️ STOP WHEN</label>
+      <select id="scanCondition">
+        <option value="homeWin">🏠 HOME WIN</option>
+        <option value="awayWin">✈️ AWAY WIN</option>
+        <option value="btts">↔️ BTTS YES</option>
+        <option value="over2.5">📈 OVER 2.5</option>
+        <option value="underdog">🐕 UNDERDOG</option>
+      </select>
+    </div>
+    <div class="btn-group">
+      <button class="btn" id="scanStartBtn">▶ AUTO SCAN</button>
+      <button class="btn btn-stop" id="scanStopBtn">⏹ STOP</button>
+    </div>
+    <div class="progress-container">
+      <div class="progress-fill" id="scanProgress"></div>
+    </div>
+  </div>
+
+  <div class="cards-stack">
+    <div class="card">
+      <h3>🎯 1X2 / WIN</h3>
+      <div class="stat-row"><span>Home</span><span class="value" id="winHome">-</span></div>
+      <div class="stat-row"><span>Draw</span><span class="value" id="winDraw">-</span></div>
+      <div class="stat-row"><span>Away</span><span class="value" id="winAway">-</span></div>
+      <div class="badge" id="straightTip">⚡ tip: -</div>
+    </div>
+    <div class="card">
+      <h3>📊 GOALS / BTTS</h3>
+      <div class="stat-row"><span>Over 2.5</span><span class="value" id="overProb">-</span></div>
+      <div class="stat-row"><span>Under 2.5</span><span class="value" id="underProb">-</span></div>
+      <div class="stat-row"><span>BTTS (yes)</span><span class="value" id="bttsYes">-</span></div>
+      <div class="stat-row"><span>Exact score</span><span class="value" id="exactScore">-</span></div>
+    </div>
+    <div class="card">
+      <h3>🧠 FORM & TRAP</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
+        <span class="form-badge" id="homeForm">HOME FORM</span>
+        <span class="form-badge" id="awayForm">AWAY FORM</span>
+      </div>
+      <div class="trap-msg" id="trapMessage">⚠️ trap analysis</div>
+    </div>
+    <div class="card">
+      <h3>⚙️ ADVANCED</h3>
+      <div class="stat-row"><span>underdog upset</span><span class="value" id="upsetProb">-</span></div>
+      <div class="stat-row"><span>variance</span><span class="value" id="varianceScore">-</span></div>
+      <div class="stat-row"><span>true power holder</span><span class="value" id="truePower">-</span></div>
+      <div class="stat-row"><span>suppression</span><span class="value" id="suppression">-</span></div>
+      <div class="stat-row"><span>⭐ star effect</span><span class="value" id="starEffect">-</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>⏱️ seed = ms + LCG</span>
+    <span>ZMW 0.00</span>
+  </div>
+</div>
+
+<script>
+(function() {
+
+  // ===================== TEAM DATABASE =====================
+  const teams = {
+
+    // ── ENGLAND ──────────────────────────────────────────
+    "CHE": { name:"Chelsea",        sv:89, gp:86, league:"england" },
+    "LEE": { name:"Leeds",          sv:74, gp:72, league:"england" },
+    "TOT": { name:"Tottenham",      sv:86, gp:90, league:"england" },
+    "BRE": { name:"Brentford",      sv:68, gp:62, league:"england" },
+    "FUL": { name:"Fulham",         sv:72, gp:70, league:"england" },
+    "MUN": { name:"Man Utd",        sv:88, gp:82, league:"england" },
+    "CRY": { name:"Crystal Palace", sv:69, gp:66, league:"england" },
+    "WOL": { name:"Wolves",         sv:74, gp:72, league:"england" },
+    "BUR": { name:"Burnley",        sv:65, gp:63, league:"england" },
+    "ARS": { name:"Arsenal",        sv:92, gp:90, league:"england" },
+    "NEW": { name:"Newcastle",      sv:84, gp:80, league:"england" },
+    "BOU": { name:"Bournemouth",    sv:64, gp:68, league:"england" },
+    "FOR": { name:"Nottm Forest",   sv:71, gp:69, league:"england" },
+    "MCI": { name:"Man City",       sv:98, gp:96, league:"england" },
+    "LIV": { name:"Liverpool",      sv:94, gp:92, league:"england" },
+    "BHA": { name:"Brighton",       sv:79, gp:77, league:"england" },
+    "SUN": { name:"Sunderland",     sv:60, gp:58, league:"england" },
+    "WHU": { name:"West Ham",       sv:76, gp:74, league:"england" },
+    "AST": { name:"Aston Villa",    sv:83, gp:81, league:"england" },
+    "EVE": { name:"Everton",        sv:67, gp:65, league:"england" },
+
+    // ── GERMANY ───────────────────────────────────────────
+    "LEV": { name:"Leverkusen",  sv:95, gp:94, league:"germany" },
+    "STP": { name:"St. Pauli",   sv:64, gp:63, league:"germany" },
+    "HDH": { name:"Heidenheim",  sv:65, gp:62, league:"germany" },
+    "FCA": { name:"Augsburg",    sv:67, gp:65, league:"germany" },
+    "UNI": { name:"Union Berlin",sv:73, gp:69, league:"germany" },
+    "BMG": { name:"M'gladbach",  sv:75, gp:74, league:"germany" },
+    "BMU": { name:"Bayern",      sv:99, gp:98, league:"germany" },
+    "WOB": { name:"Wolfsburg",   sv:78, gp:76, league:"germany" },
+    "TSG": { name:"Hoffenheim",  sv:72, gp:74, league:"germany" },
+    "RBL": { name:"RB Leipzig",  sv:90, gp:88, league:"germany" },
+    "SGE": { name:"Frankfurt",   sv:80, gp:79, league:"germany" },
+    "HSV": { name:"Hamburg",     sv:68, gp:69, league:"germany" },
+    "BVB": { name:"Dortmund",    sv:93, gp:91, league:"germany" },
+    "VFB": { name:"Stuttgart",   sv:79, gp:78, league:"germany" },
+    "KOE": { name:"Köln",        sv:71, gp:70, league:"germany" },
+    "SCF": { name:"Freiburg",    sv:76, gp:73, league:"germany" },
+    "SVW": { name:"Werder",      sv:70, gp:73, league:"germany" },
+    "MAI": { name:"Mainz",       sv:70, gp:68, league:"germany" },
+
+    // ── ITALY ─────────────────────────────────────────────
+    "NAP": { name:"Napoli",     sv:89, gp:87, league:"italy" },
+    "SAS": { name:"Sassuolo",   sv:72, gp:75, league:"italy" },
+    "PIS": { name:"Pisa",       sv:66, gp:64, league:"italy" },
+    "TOR": { name:"Torino",     sv:74, gp:71, league:"italy" },
+    "FIO": { name:"Fiorentina", sv:81, gp:80, league:"italy" },
+    "VER": { name:"Verona",     sv:69, gp:67, league:"italy" },
+    "LEC": { name:"Lecce",      sv:64, gp:62, league:"italy" },
+    "LAZ": { name:"Lazio",      sv:83, gp:81, league:"italy" },
+    "JUV": { name:"Juventus",   sv:94, gp:85, league:"italy" },
+    "COM": { name:"Como",       sv:63, gp:61, league:"italy" },
+    "CAG": { name:"Cagliari",   sv:68, gp:66, league:"italy" },
+    "GEN": { name:"Genoa",      sv:71, gp:70, league:"italy" },
+    "ACM": { name:"Milan",      sv:90, gp:88, league:"italy" },
+    "UDI": { name:"Udinese",    sv:73, gp:72, league:"italy" },
+    "ROM": { name:"Roma",       sv:86, gp:83, league:"italy" },
+    "USC": { name:"Cremonese",  sv:61, gp:59, league:"italy" },
+    "PAR": { name:"Parma",      sv:70, gp:68, league:"italy" },
+    "INT": { name:"Inter",      sv:96, gp:94, league:"italy" },
+    "BFC": { name:"Bologna",    sv:57, gp:54, league:"italy" },
+    "ATA": { name:"Atalanta",   sv:87, gp:85, league:"italy" },
+
+    // ── SPAIN ─────────────────────────────────────────────
+    "RMA": { name:"Real Madrid", sv:99, gp:97, league:"spain" },
+    "FCB": { name:"Barcelona",   sv:95, gp:96, league:"spain" },
+    "ATM": { name:"Atletico",    sv:89, gp:82, league:"spain" },
+    "VCF": { name:"Valencia",    sv:77, gp:75, league:"spain" },
+
+    // ── CHAMPIONS LEAGUE ──────────────────────────────────
+    "ACM_C": { name:"AC Milan",     sv:90, gp:88, league:"champions" },
+    "JUV_C": { name:"Juventus",     sv:94, gp:85, league:"champions" },
+    "LIV_C": { name:"Liverpool",    sv:94, gp:92, league:"champions" },
+    "TOT_C": { name:"Tottenham",    sv:86, gp:90, league:"champions" },
+    "RMA_C": { name:"Real Madrid",  sv:99, gp:97, league:"champions" },
+    "MUN_C": { name:"Man Utd",      sv:88, gp:82, league:"champions" },
+    "FCB_C": { name:"Barcelona",    sv:95, gp:96, league:"champions" },
+    "BMU_C": { name:"Bayern",       sv:99, gp:98, league:"champions" },
+    "PSG":   { name:"PSG",          sv:93, gp:95, league:"champions" },
+    "POR_C": { name:"Porto",        sv:83, gp:81, league:"champions" },
+    "ATM_C": { name:"Atletico",     sv:89, gp:82, league:"champions" },
+    "NAP_C": { name:"Napoli",       sv:89, gp:87, league:"champions" },
+    "BEN":   { name:"Benfica",      sv:84, gp:83, league:"champions" },
+    "VCF_C": { name:"Valencia",     sv:77, gp:75, league:"champions" },
+    "ARS_C": { name:"Arsenal",      sv:92, gp:90, league:"champions" },
+    "BVB_C": { name:"Dortmund",     sv:93, gp:91, league:"champions" },
+    "CHE_C": { name:"Chelsea",      sv:89, gp:86, league:"champions" },
+    "MCI_C": { name:"Man City",     sv:98, gp:96, league:"champions" },
+    "NEW_C": { name:"Newcastle",    sv:84, gp:80, league:"champions" },
+    "INT_C": { name:"Inter",        sv:96, gp:94, league:"champions" },
+
+    // ── EUROS ─────────────────────────────────────────────
+    "SUI": { name:"Switzerland",  sv:78, gp:75, league:"euros" },
+    "SCO": { name:"Scotland",     sv:68, gp:66, league:"euros" },
+    "DEN": { name:"Denmark",      sv:80, gp:77, league:"euros" },
+    "ESP": { name:"Spain",        sv:93, gp:91, league:"euros" },
+    "NED": { name:"Netherlands",  sv:90, gp:88, league:"euros" },
+    "POR": { name:"Portugal",     sv:92, gp:90, league:"euros" },
+    "SVK": { name:"Slovakia",     sv:69, gp:67, league:"euros" },
+    "SRB": { name:"Serbia",       sv:74, gp:76, league:"euros" },
+    "ROU": { name:"Romania",      sv:71, gp:69, league:"euros" },
+    "GEO": { name:"Georgia",      sv:65, gp:63, league:"euros" },
+    "SVN": { name:"Slovenia",     sv:68, gp:66, league:"euros" },
+    "CRO": { name:"Croatia",      sv:84, gp:81, league:"euros" },
+    "CZE": { name:"Czechia",      sv:75, gp:73, league:"euros" },
+    "AUT": { name:"Austria",      sv:77, gp:76, league:"euros" },
+    "HUN": { name:"Hungary",      sv:72, gp:71, league:"euros" },
+    "FRA": { name:"France",       sv:97, gp:96, league:"euros" },
+    "POL": { name:"Poland",       sv:73, gp:74, league:"euros" },
+    "BEL": { name:"Belgium",      sv:89, gp:87, league:"euros" },
+    "TUR": { name:"Turkey",       sv:76, gp:78, league:"euros" },
+    "ENG": { name:"England",      sv:95, gp:93, league:"euros" },
+    "ALB": { name:"Albania",      sv:64, gp:62, league:"euros" },
+    "GER": { name:"Germany",      sv:92, gp:90, league:"euros" },
+    "ITA": { name:"Italy",        sv:87, gp:83, league:"euros" },
+    "UKR": { name:"Ukraine",      sv:75, gp:74, league:"euros" },
+
+    // ── CLUB WORLD CUP ────────────────────────────────────
+    "ULS":  { name:"Ulsan",        sv:70, gp:68, league:"clubwc" },
+    "PAL":  { name:"Palmeiras",    sv:82, gp:81, league:"clubwc" },
+    "MCI_W":{ name:"Man City",     sv:98, gp:96, league:"clubwc" },
+    "HIL":  { name:"Al Hilal",     sv:80, gp:79, league:"clubwc" },
+    "URA":  { name:"Urawa",        sv:70, gp:68, league:"clubwc" },
+    "AKL":  { name:"Auckland",     sv:62, gp:60, league:"clubwc" },
+    "BEN_W":{ name:"Benfica",      sv:84, gp:83, league:"clubwc" },
+    "RIV":  { name:"River Plate",  sv:83, gp:80, league:"clubwc" },
+    "POR_W":{ name:"Porto",        sv:83, gp:81, league:"clubwc" },
+    "AHL":  { name:"Al Ahly",      sv:77, gp:75, league:"clubwc" },
+    "FLU":  { name:"Fluminense",   sv:79, gp:78, league:"clubwc" },
+    "RMA_W":{ name:"Real Madrid",  sv:99, gp:97, league:"clubwc" },
+    "INT_W":{ name:"Inter",        sv:96, gp:94, league:"clubwc" },
+    "WAC":  { name:"Wydad",        sv:69, gp:68, league:"clubwc" },
+    "BOC":  { name:"Boca Juniors", sv:81, gp:76, league:"clubwc" },
+    "PSG_W":{ name:"PSG",          sv:93, gp:95, league:"clubwc" },
+    "CHE_W":{ name:"Chelsea",      sv:89, gp:86, league:"clubwc" },
+    "JUV_W":{ name:"Juventus",     sv:94, gp:85, league:"clubwc" },
+    "BAY":  { name:"Bayern",       sv:99, gp:98, league:"clubwc" },
+    "MTY":  { name:"Monterrey",    sv:77, gp:75, league:"clubwc" },
+    "SEA":  { name:"Seattle",      sv:71, gp:72, league:"clubwc" },
+    "BVB_W":{ name:"Dortmund",     sv:93, gp:91, league:"clubwc" },
+    "AIN":  { name:"Al Ain",       sv:66, gp:64, league:"clubwc" },
+    "RBS":  { name:"Salzburg",     sv:78, gp:80, league:"clubwc" },
+    "LAFC": { name:"LAFC",         sv:75, gp:77, league:"clubwc" },
+    "PAC":  { name:"Pachuca",      sv:73, gp:71, league:"clubwc" },
+    "BOT":  { name:"Botafogo",     sv:74, gp:73, league:"clubwc" },
+    "MIA":  { name:"Inter Miami",  sv:72, gp:76, league:"clubwc" },
+    "EST":  { name:"Estudiantes",  sv:71, gp:70, league:"clubwc" },
+    "SUN_W":{ name:"Sundowns",     sv:74, gp:72, league:"clubwc" },
+    "ATM_W":{ name:"Atletico",     sv:89, gp:82, league:"clubwc" },
+    "FLA":  { name:"Flamengo",     sv:85, gp:87, league:"clubwc" },
+
+    // ── AFRICAN CUP ───────────────────────────────────────
+    "SEN": { name:"Senegal",  sv:82, gp:80, league:"african" },
+    "MAR": { name:"Morocco",  sv:84, gp:82, league:"african" },
+    "EGY": { name:"Egypt",    sv:81, gp:79, league:"african" },
+    "NGA": { name:"Nigeria",  sv:79, gp:77, league:"african" },
+    "CMR": { name:"Cameroon", sv:76, gp:74, league:"african" },
+    "GHA": { name:"Ghana",    sv:74, gp:72, league:"african" },
+    "CIV": { name:"Ivory Coast",sv:80,gp:78,league:"african" },
+    "ALG": { name:"Algeria",  sv:77, gp:75, league:"african" },
+    "TUN": { name:"Tunisia",  sv:73, gp:71, league:"african" },
+    "MLI": { name:"Mali",     sv:71, gp:69, league:"african" },
+    "ZAF": { name:"S. Africa",sv:70, gp:68, league:"african" },
+    "COD": { name:"DR Congo", sv:72, gp:70, league:"african" },
+  };
+
+  // state
+  let currentLeague = 'england';
+  let homeStar = false, awayStar = false;
+  let scanInterval = null, progressInterval = null;
+  const SCAN_INTERVAL_MS = 2800;
+
+  // DOM refs
+  const leagueBtns   = document.querySelectorAll('.league-btn');
+  const homeSelect    = document.getElementById('homeTeam');
+  const awaySelect    = document.getElementById('awayTeam');
+  const starHomeBtn   = document.getElementById('starHome');
+  const starAwayBtn   = document.getElementById('starAway');
+  const homeStarInd   = document.getElementById('homeStarInd');
+  const awayStarInd   = document.getElementById('awayStarInd');
+  const predictBtn    = document.getElementById('predictBtn');
+  const scanStart     = document.getElementById('scanStartBtn');
+  const scanStop      = document.getElementById('scanStopBtn');
+  const scanCondition = document.getElementById('scanCondition');
+  const flashlight    = document.getElementById('flashlight');
+  const progressFill  = document.getElementById('scanProgress');
+  const phoneClock    = document.getElementById('phoneClock');
+
+  // Live clock
+  function updateClock() {
+    const now = new Date();
+    phoneClock.textContent =
+      now.getHours().toString().padStart(2,'0') + ':' +
+      now.getMinutes().toString().padStart(2,'0');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // League tabs
+  leagueBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      leagueBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLeague = btn.dataset.league;
+      populateDropdowns();
+    });
+  });
+
+  function populateDropdowns() {
+    const leagueTeams = Object.entries(teams)
+      .filter(([, info]) => info.league === currentLeague)
+      .map(([code]) => code);
+    const options = leagueTeams.length ? leagueTeams : ['LIV','MUN'];
+    homeSelect.innerHTML = '';
+    awaySelect.innerHTML = '';
+    options.forEach(code => {
+      const display = `${code} (${teams[code]?.name || code})`;
+      homeSelect.add(new Option(display, code));
+      awaySelect.add(new Option(display, code));
+    });
+    homeSelect.value = options[0];
+    awaySelect.value = options[options.length > 1 ? 1 : 0];
+  }
+
+  // Star toggles
+  starHomeBtn.addEventListener('click', () => {
+    homeStar = !homeStar;
+    starHomeBtn.classList.toggle('active', homeStar);
+    starHomeBtn.querySelector('.star-icon').innerHTML = homeStar ? '★' : '☆';
+    homeStarInd.innerText = homeStar ? '⭐ boosted' : '';
+  });
+  starAwayBtn.addEventListener('click', () => {
+    awayStar = !awayStar;
+    starAwayBtn.classList.toggle('active', awayStar);
+    starAwayBtn.querySelector('.star-icon').innerHTML = awayStar ? '★' : '☆';
+    awayStarInd.innerText = awayStar ? '⭐ boosted' : '';
+  });
+
+  // Seed + PRNG
+  function getSeed() {
+    const now = Date.now();
+    return (1664525 * now + 1013904223) % (2**32);
+  }
+  function mulberry32(seed) {
+    return function() {
+      seed |= 0;
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function predictMatch() {
+    const homeCode = homeSelect.value;
+    const awayCode = awaySelect.value;
+    if (!homeCode || !awayCode) return;
+
+    const rng  = mulberry32(getSeed());
+    const home = teams[homeCode] || { sv:70, gp:68 };
+    const away = teams[awayCode] || { sv:70, gp:68 };
+
+    let homeSV = home.sv + (homeStar ? 15 : 0);
+    let homeGP = home.gp + (homeStar ? 10 : 0);
+    let awaySV = away.sv + (awayStar ? 15 : 0);
+    let awayGP = away.gp + (awayStar ? 10 : 0);
+
+    const homeWNt = homeSV * (homeGP / 50);
+    const awayWNt = awaySV * (awayGP / 50);
+    const totalWNt = homeWNt + awayWNt;
+
+    let rawHome = homeWNt / totalWNt * 0.82;
+    let rawAway = awayWNt / totalWNt * 0.82;
+
+    const homeProb = Math.min(0.9, Math.max(0.08, rawHome + (rng() - 0.5) * 0.12));
+    const awayProb = Math.min(0.9, Math.max(0.08, rawAway + (rng() - 0.5) * 0.12));
+    const drawProb = 1 - homeProb - awayProb;
+
+    const homeExp = (homeGP / 60) * (homeSV / 70) * (0.9 + rng() * 0.3);
+    const awayExp = (awayGP / 60) * (awaySV / 70) * (0.9 + rng() * 0.3);
+
+    let homeG = 0, awayG = 0;
+    for (let m = 0; m < 10; m++) {
+      if (rng() < homeExp * 0.23) homeG++;
+      if (rng() < awayExp * 0.23) awayG++;
+    }
+    homeG = Math.min(7, homeG);
+    awayG = Math.min(7, awayG);
+    const totalGoals = homeG + awayG;
+    const btts = (homeG > 0 && awayG > 0) ? 1 : 0;
+    const overProbVal = Math.min(0.93, (homeExp + awayExp) / 3.2);
+
+    const homeForm = homeExp > 0.9 ? 'good' : (homeExp < 0.5 ? 'bad' : 'avg');
+    const awayForm = awayExp > 0.9 ? 'good' : (awayExp < 0.5 ? 'bad' : 'avg');
+
+    const strengthDiff = homeSV - awaySV;
+    const upsetLikely = (Math.abs(strengthDiff) < 12 && (awayProb > 0.45 || homeProb > 0.45)) ||
+                        (strengthDiff > 25 && awayProb > 0.3);
+    const trap = upsetLikely ||
+                 (homeProb > 0.75 && awayExp > homeExp) ||
+                 (awayProb > 0.75 && homeExp > awayExp);
+
+    const underdogProb = (strengthDiff > 0 ? awayProb : homeProb) * 1.2;
+    const variance     = Math.abs(homeExp - awayExp).toFixed(2);
+    const truePower    = homeWNt > awayWNt ? homeCode : awayCode;
+    const homeSuppress = (homeSV > 80 && homeGP < 65) ? 'yes' : 'no';
+    const awaySuppress = (awaySV > 80 && awayGP < 65) ? 'yes' : 'no';
+    const starEffectStr = (homeStar ? homeCode+'⭐ ' : '') + (awayStar ? awayCode+'⭐' : '');
+
+    // Update UI
+    document.getElementById('winHome').innerText = (homeProb*100).toFixed(1)+'%';
+    document.getElementById('winDraw').innerText = (drawProb*100).toFixed(1)+'%';
+    document.getElementById('winAway').innerText = (awayProb*100).toFixed(1)+'%';
+    const tip = homeProb > awayProb && homeProb > drawProb
+      ? `HOME ${homeCode}` : (awayProb > homeProb ? `AWAY ${awayCode}` : 'DRAW');
+    document.getElementById('straightTip').innerText = `⚡ ${tip}`;
+
+    document.getElementById('overProb').innerText  = (overProbVal*100).toFixed(1)+'%';
+    document.getElementById('underProb').innerText = ((1-overProbVal)*100).toFixed(1)+'%';
+    document.getElementById('bttsYes').innerText   = (btts?'YES':'NO')+` (${btts?0.7:0.3})`;
+    document.getElementById('exactScore').innerText = `${homeG}-${awayG}`;
+
+    document.getElementById('homeForm').innerText = `${homeCode} form: ${homeForm}`;
+    document.getElementById('homeForm').className = `form-badge ${homeForm==='good'?'form-good':(homeForm==='bad'?'form-bad':'')}`;
+    document.getElementById('awayForm').innerText = `${awayCode} form: ${awayForm}`;
+    document.getElementById('awayForm').className = `form-badge ${awayForm==='good'?'form-good':(awayForm==='bad'?'form-bad':'')}`;
+
+    const trapMsg = trap ? '🚨 TRAP! Favourite may be overrated.' : '✅ No trap, clean match.';
+    document.getElementById('trapMessage').innerHTML = `⚠️ ${trapMsg}`;
+    flashlight.className = `flashlight ${trap?'red':'green'}`;
+
+    document.getElementById('upsetProb').innerText    = (underdogProb*100).toFixed(1)+'%';
+    document.getElementById('varianceScore').innerText = variance;
+    document.getElementById('truePower').innerText    = truePower;
+    document.getElementById('suppression').innerText  = `H:${homeSuppress} A:${awaySuppress}`;
+    document.getElementById('starEffect').innerText   = starEffectStr || 'none';
+
+    return { homeProb, awayProb, drawProb, btts, totalGoals, homeCode, awayCode };
+  }
+
+  predictBtn.addEventListener('click', predictMatch);
+
+  function checkConditionAndStop() {
+    const res = predictMatch();
+    if (!res) return;
+    const cond = scanCondition.value;
+    let met = false;
+    if      (cond === 'homeWin' && res.homeProb > 0.55) met = true;
+    else if (cond === 'awayWin' && res.awayProb > 0.55) met = true;
+    else if (cond === 'btts'    && res.btts === 1)       met = true;
+    else if (cond === 'over2.5' && res.totalGoals >= 3)  met = true;
+    else if (cond === 'underdog') {
+      const isUpset = (res.homeProb < 0.4 && res.homeProb > 0.15) ||
+                      (res.awayProb < 0.4 && res.awayProb > 0.15);
+      if (isUpset) met = true;
+    }
+    if (met) { alert(`✅ Condition "${cond}" met! Scan stopped.`); stopScan(); }
+  }
+
+  function startProgress() {
+    const t0 = Date.now();
+    if (progressInterval) clearInterval(progressInterval);
+    progressInterval = setInterval(() => {
+      const pct = Math.min(100, ((Date.now()-t0) / SCAN_INTERVAL_MS) * 100);
+      progressFill.style.width = pct + '%';
+      if (pct >= 100) { clearInterval(progressInterval); progressInterval = null; }
+    }, 50);
+  }
+
+  function startScan() {
+    if (scanInterval) clearInterval(scanInterval);
+    startProgress();
+    scanInterval = setInterval(() => {
+      checkConditionAndStop();
+      if (progressInterval) clearInterval(progressInterval);
+      startProgress();
+    }, SCAN_INTERVAL_MS);
+  }
+
+  function stopScan() {
+    if (scanInterval)  { clearInterval(scanInterval);  scanInterval = null; }
+    if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
+    progressFill.style.width = '0%';
+  }
+
+  scanStart.addEventListener('click', startScan);
+  scanStop.addEventListener('click', stopScan);
+
+  populateDropdowns();
+  predictMatch();
+})();
+</script>
+</body>
+</html>

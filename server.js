@@ -1,136 +1,170 @@
+/**
+ * Virtual Football Analytics Platform
+ * Human-like behavior proxy server
+ */
+
 const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-const path = require('path');
+const cors = require('cors');
+const helmet = require('helmet');
+const axios = require('axios');
+const NodeCache = require('node-cache');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ---------- SAFETY FEATURES ----------
+// Cache with stale fallback
+const cache = new NodeCache({ stdTTL: 30, checkperiod: 60 });
+const staleCache = new NodeCache({ stdTTL: 300 });
 
-// 1. Rotating User‑Agents
-const userAgents = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1'
-];
+// Human behavior config
+const HUMAN = {
+  minDelay: 2000,
+  maxDelay: 5000,
+  userAgents: [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15'
+  ]
+};
 
-// 2. Cookie persistence
-let cookieJar = {};
+// Utilities
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomDelay = () => sleep(random(HUMAN.minDelay, HUMAN.maxDelay));
+const getUA = () => HUMAN.userAgents[random(0, HUMAN.userAgents.length - 1)];
 
-// 3. Failure tracking for exponential backoff
-const failureCount = {};
-
-// 4. Simple in‑memory cache (25 seconds)
-const cache = new Map();
-const CACHE_TTL = 25000;
-
-// ---------- PROXY MIDDLEWARE ----------
-app.use('/proxy', (req, res, next) => {
-  const endpoint = req.url;
-
-  // Check cache first
-  const cached = cache.get(endpoint);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log(`[CACHE] Returning cached response for ${endpoint}`);
-    return res.json(cached.data);
+// Request tracking
+let requestCount = 0;
+const canRequest = () => {
+  if (requestCount > 25) {
+    console.log('[SAFETY] Hourly limit reached, pausing...');
+    return false;
   }
+  return true;
+};
 
-  // Exponential backoff: if this endpoint failed too many times recently, block it
-  if (failureCount[endpoint] > 3) {
-    console.warn(`[BLOCKED] Endpoint ${endpoint} temporary disabled due to repeated failures`);
-    return res.status(503).json({ error: 'Service temporarily unavailable' });
-  }
+// Reset counter hourly
+setInterval(() => { requestCount = 0; }, 3600000);
 
-  // Random delay to vary request timing (500–1500ms)
-  const delay = Math.floor(Math.random() * 1000) + 500;
-  setTimeout(() => {
-    // Pick a random User‑Agent
-    const randomUA = userAgents[Math.floor(Math.random() * userAgents.length)];
+// Middleware
+app.use(helmet({ hidePoweredBy: { setTo: 'Apache/2.4.41' } }));
+app.use(cors({ origin: true, credentials: false }));
+app.use(express.json());
 
-    // Create proxy
-    const proxy = createProxyMiddleware({
-      target: 'https://sports.betpawa.co.zm',
-      changeOrigin: true,
-      onProxyReq: (proxyReq) => {
-        // Add realistic headers
-        proxyReq.setHeader('User-Agent', randomUA);
-        proxyReq.setHeader('Accept', 'application/json, text/plain, */*');
-        proxyReq.setHeader('Accept-Language', 'en-US,en;q=0.9');
-        proxyReq.setHeader('Referer', 'https://sports.betpawa.co.zm/');
-        proxyReq.setHeader('Origin', 'https://sports.betpawa.co.zm');
-        proxyReq.setHeader('X-Pawa-Brand', 'betpawa-zambia');
-        proxyReq.removeHeader('X-Forwarded-For');
-
-        // Attach stored cookies if any
-        if (Object.keys(cookieJar).length) {
-          const cookieString = Object.entries(cookieJar)
-            .map(([k, v]) => `${k}=${v}`)
-            .join('; ');
-          proxyReq.setHeader('Cookie', cookieString);
-        }
-      },
-      onProxyRes: (proxyRes) => {
-        // Capture Set-Cookie headers
-        const setCookie = proxyRes.headers['set-cookie'];
-        if (setCookie) {
-          setCookie.forEach(c => {
-            const [keyval] = c.split(';');
-            const [key, val] = keyval.split('=');
-            cookieJar[key] = val;
-          });
-        }
-
-        // Inspect response for blocking signals
-        let body = '';
-        proxyRes.on('data', chunk => { body += chunk; });
-        proxyRes.on('end', () => {
-          const contentType = proxyRes.headers['content-type'] || '';
-          if (contentType.includes('text/html') && (body.includes('captcha') || body.includes('blocked') || body.includes('access denied'))) {
-            console.error('[BLOCKED] BetPawa returned a blocking page');
-            // Invalidate cache and mark failure
-            cache.delete(endpoint);
-            failureCount[endpoint] = (failureCount[endpoint] || 0) + 1;
-          } else if (proxyRes.statusCode >= 400) {
-            // Track HTTP errors
-            failureCount[endpoint] = (failureCount[endpoint] || 0) + 1;
-          } else {
-            // Success: reset failure count
-            delete failureCount[endpoint];
-            // Cache the successful response
-            try {
-              const jsonData = JSON.parse(body);
-              cache.set(endpoint, { timestamp: Date.now(), data: jsonData });
-            } catch (e) {
-              // Not JSON, don't cache
-            }
-          }
-        });
-      },
-      onError: (err) => {
-        console.error('[PROXY ERROR]', err);
-        failureCount[endpoint] = (failureCount[endpoint] || 0) + 1;
-        // Reset failure count after 60 seconds
-        setTimeout(() => { delete failureCount[endpoint]; }, 60000);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Proxy error', details: err.message });
-        }
-      }
-    });
-
-    proxy(req, res, next);
-  }, delay);
+// BetPawa client
+const client = axios.create({
+  baseURL: 'https://www.betpawa.zm',
+  timeout: 15000
 });
 
-// Serve static files (including betpawa_predictor.html)
-app.use(express.static(path.join(__dirname)));
+// Add human-like behavior
+client.interceptors.request.use(async (config) => {
+  if (!canRequest()) {
+    await sleep(60000); // Wait 1 minute if limit hit
+    requestCount = 0;
+  }
+  
+  // Random delay (2-5 seconds)
+  await randomDelay();
+  
+  // Occasionally slower (checking phone, distracted)
+  if (Math.random() > 0.85) {
+    await sleep(random(5000, 8000));
+    console.log('[HUMAN] Distracted delay...');
+  }
+  
+  // Rotate user agent
+  config.headers['User-Agent'] = getUA();
+  config.headers['X-Pawa-Brand'] = 'betpawa-zambia';
+  
+  // Random viewport
+  const viewports = ['1920x1080', '1366x768', '1440x900', '1536x864', '1280x720'];
+  config.headers['Viewport-Width'] = viewports[random(0, viewports.length - 1)];
+  
+  requestCount++;
+  return config;
+});
 
-// Fallback route to serve the main HTML
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'betpawa_predictor.html'));
+// Cache key generator
+const cacheKey = (req) => `${req.path}:${JSON.stringify(req.query)}`;
+
+// Proxy function
+async function proxy(req, res, endpoint) {
+  const key = cacheKey(req);
+  
+  // Check fresh cache
+  const fresh = cache.get(key);
+  if (fresh) {
+    res.set('X-Cache', 'HIT');
+    return res.json(fresh);
+  }
+  
+  // Check stale cache (serve while fetching)
+  const stale = staleCache.get(key);
+  
+  try {
+    const response = await client.get(endpoint, { params: req.query });
+    
+    if (response.data) {
+      cache.set(key, response.data);
+      staleCache.set(key, response.data);
+      res.set('X-Cache', 'MISS');
+      return res.json(response.data);
+    }
+    
+    throw new Error('Empty response');
+    
+  } catch (err) {
+    console.error(`[ERROR] ${err.message}`);
+    
+    // Serve stale if available
+    if (stale) {
+      res.set('X-Cache', 'STALE');
+      return res.json(stale);
+    }
+    
+    res.status(503).json({ 
+      error: 'Temporarily unavailable',
+      retryAfter: 30
+    });
+  }
+}
+
+// Routes
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    uptime: process.uptime(),
+    requestsThisHour: requestCount
+  });
+});
+
+app.get('/api/sportsbook/virtual/v1/seasons/list/actual', (req, res) => {
+  proxy(req, res, '/api/sportsbook/virtual/v1/seasons/list/actual');
+});
+
+app.get('/api/sportsbook/virtual/v2/events/list/by-round/:roundId', (req, res) => {
+  const { roundId } = req.params;
+  const page = req.query.page || 'upcoming';
+  proxy(req, res, `/api/sportsbook/virtual/v2/events/list/by-round/${roundId}?page=${page}`);
+});
+
+// Serve frontend
+app.use(express.static('public'));
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('[ERROR]', err.message);
+  res.status(500).json({ error: 'Internal error' });
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Secure proxy server running on port ${PORT}`);
+  console.log(`
+╔══════════════════════════════════════╗
+║  Virtual Football Analytics          ║
+║  http://localhost:${PORT}              ║
+╚══════════════════════════════════════╝
+  `);
 });

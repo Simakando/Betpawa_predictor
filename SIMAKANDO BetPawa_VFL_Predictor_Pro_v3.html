@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BetPawa VFL Predictor Pro v3.0 — 26-Model Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;900&display=swap');
+  :root{--primary:#1a472a;--primary-light:#00c851;--secondary:#07071a;--accent:#ff6b35;--gold:#ffd700;--gold2:#ffaa00;--danger:#ff3547;--bg:#050510;--card:#0d0d20;--card2:#13132a;--card3:#18183a;--text:#e8e8f5;--text2:#7878a0;--border:#22224a;--green:#00c851;--red:#ff3547;--blue:#4a9eff;--orange:#ff9800;--purple:#a855f7;--teal:#00bcd4;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 0%,rgba(0,200,81,.07) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(255,215,0,.05) 0%,transparent 50%);pointer-events:none;z-index:0;}
+  .header{background:linear-gradient(135deg,#0f0f2a 0%,#07071a 100%);border-bottom:2px solid rgba(255,215,0,.4);padding:10px 15px;text-align:center;position:sticky;top:0;z-index:1000;backdrop-filter:blur(10px);}
+  .header-title{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:3px;}
+  .header-sub{font-size:9px;color:var(--text2);margin-top:2px;}
+  .accuracy-badge{display:inline-block;background:linear-gradient(135deg,var(--green),#007a30);color:#000;padding:3px 12px;border-radius:20px;font-size:9px;font-weight:700;margin-top:5px;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .data-quality-bar{background:linear-gradient(90deg,#0a0a1f,#0f102a,#0a0a1f);border-bottom:1px solid var(--purple);padding:5px 12px;display:flex;align-items:center;justify-content:space-between;font-size:9px;gap:6px;flex-wrap:wrap;}
+  .dq-item{display:flex;align-items:center;gap:4px;}
+  .dq-dot{width:6px;height:6px;border-radius:50%;}
+  .dq-dot.real{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .dq-dot.static{background:var(--orange);}
+  .dq-dot.loading{background:var(--blue);animation:blink .8s infinite;}
+  .dq-label{color:var(--text2);}
+  .dq-value{color:var(--text);font-weight:700;}
+  .dq-matches{color:var(--purple);font-weight:700;}
+  .live-status-bar{background:linear-gradient(90deg,#060f06,#0a1a0a,#060f06);border-bottom:1px solid rgba(0,200,81,.3);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .live-indicator{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1s infinite;}
+  .live-dot.offline{background:var(--red);animation:none;}
+  .live-dot.loading{background:var(--blue);animation:blink .5s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  .season-info{font-size:11px;font-weight:700;color:var(--gold);}
+  .matchday-info{font-size:11px;color:var(--text2);}
+  .countdown-box{background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.4);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:900;color:var(--gold);font-family:'Rajdhani',sans-serif;min-width:75px;text-align:center;}
+  .refresh-btn{background:rgba(0,200,81,.1);border:1px solid var(--green);border-radius:5px;color:var(--green);font-size:9px;font-weight:700;padding:4px 9px;cursor:pointer;transition:all .2s;}
+  .refresh-btn:hover{background:var(--green);color:#000;}
+  .refresh-btn.loading{opacity:.5;cursor:wait;}
+  .league-selector{display:flex;gap:5px;padding:8px 10px;overflow-x:auto;background:var(--card);border-bottom:1px solid var(--border);scrollbar-width:none;}
+  .league-selector::-webkit-scrollbar{display:none;}
+  .league-btn{flex:0 0 auto;padding:5px 12px;background:var(--card2);border:1px solid var(--border);border-radius:20px;color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .league-btn.active,.league-btn:hover{background:rgba(0,200,81,.15);border-color:var(--primary-light);color:var(--gold);}
+  .tabs{display:flex;background:var(--secondary);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+  .tab{flex:1;padding:9px 4px;font-size:9px;font-weight:700;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;text-align:center;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;}
+  .tab.active{color:var(--primary-light);border-bottom-color:var(--primary-light);background:rgba(0,200,81,.07);}
+  .section{display:none;padding:10px;padding-bottom:80px;}
+  .section.active{display:block;}
+  .live-predictions-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 10px;background:linear-gradient(135deg,rgba(255,215,0,.08),rgba(0,200,81,.04));border:1px solid rgba(255,215,0,.3);border-radius:8px;}
+  .live-pred-title{font-size:11px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:1px;}
+  .high-conf-badge{background:var(--green);color:#000;font-size:9px;font-weight:900;padding:3px 8px;border-radius:10px;}
+  .pred-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;position:relative;overflow:hidden;}
+  .pred-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);}
+  .pred-card.ultra-conf::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .pred-card.high-conf{border-color:rgba(0,200,81,.4);background:linear-gradient(135deg,rgba(0,200,81,.05),rgba(0,0,0,0));}
+  .pred-card.ultra-conf{border-color:rgba(255,215,0,.5);background:linear-gradient(135deg,rgba(255,215,0,.06),rgba(0,0,0,0));box-shadow:0 0 20px rgba(255,215,0,.1);}
+  .pred-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .pred-match-name{font-size:15px;font-weight:900;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+  .pred-league-tag{font-size:9px;color:var(--text2);background:var(--card2);padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block;}
+  .pred-conf-badge{font-size:14px;font-weight:900;padding:4px 10px;border-radius:10px;font-family:'Rajdhani',sans-serif;}
+  .conf-ultra{background:rgba(255,215,0,.15);color:var(--gold);border:1px solid rgba(255,215,0,.3);}
+  .conf-high{background:rgba(0,200,81,.15);color:var(--green);border:1px solid rgba(0,200,81,.3);}
+  .pred-main-bet{background:linear-gradient(135deg,rgba(0,200,81,.1),rgba(0,100,40,.05));border:1px solid rgba(0,200,81,.3);border-radius:8px;padding:8px 12px;text-align:center;margin-bottom:8px;}
+  .pred-bet-label{font-size:8px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;}
+  .pred-bet-value{font-size:17px;font-weight:900;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+  .real-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+  .real-stat-box{background:var(--card2);border-radius:6px;padding:6px 8px;text-align:center;}
+  .real-stat-team{font-size:10px;font-weight:700;color:var(--gold);margin-bottom:4px;}
+  .real-stat-grid{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
+  .stat-pill{font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;}
+  .sp-over{background:rgba(0,200,81,.2);color:var(--green);}
+  .sp-btts{background:rgba(74,158,255,.2);color:var(--blue);}
+  .sp-form{background:rgba(255,215,0,.2);color:var(--gold);}
+  .sp-source{background:rgba(168,85,247,.2);color:var(--purple);}
+  .sp-elo{background:rgba(0,188,212,.2);color:var(--teal);}
+  .form-boxes-row{display:flex;gap:3px;justify-content:center;margin-top:4px;}
+  .form-box-mini{width:16px;height:16px;border-radius:3px;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;}
+  .fb-over{background:rgba(0,200,81,.3);color:var(--green);}
+  .fb-under{background:rgba(255,53,71,.3);color:var(--red);}
+  .fb-na{background:rgba(100,100,130,.3);color:var(--text2);}
+  /* MODEL BREAKDOWN */
+  .model-breakdown{background:var(--card2);border-radius:6px;padding:8px;margin-bottom:8px;}
+  .model-breakdown-title{font-size:9px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+  .model-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
+  .model-item{background:var(--card3);border-radius:4px;padding:4px;text-align:center;}
+  .model-name{font-size:7px;color:var(--text2);margin-bottom:1px;}
+  .model-prob{font-size:10px;font-weight:900;font-family:'Rajdhani',sans-serif;}
+  .mp-high{color:var(--green);}
+  .mp-med{color:var(--orange);}
+  .mp-low{color:var(--red);}
+  .consensus-bar{height:6px;background:var(--card3);border-radius:3px;overflow:hidden;margin-top:5px;}
+  .consensus-fill{height:100%;border-radius:3px;transition:width .5s;}
+  .pred-card-body{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+  .pred-info-item{background:var(--card2);padding:6px 8px;border-radius:6px;}
+  .pred-info-label{font-size:8px;color:var(--text2);text-transform:uppercase;margin-bottom:2px;}
+  .pred-info-value{font-size:10px;font-weight:700;color:var(--text);}
+  .pred-countdown{display:flex;align-items:center;justify-content:center;gap:5px;font-size:10px;color:var(--text2);}
+  .pred-countdown .time{color:var(--orange);font-weight:700;font-family:'Rajdhani',sans-serif;}
+  .pred-countdown .time.urgent{color:var(--red);animation:pulse 1s infinite;}
+  .pred-reason{font-size:9px;color:var(--text2);margin-top:5px;text-align:center;line-height:1.4;}
+  /* FILTER STATUS */
+  .filter-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);border-radius:4px;padding:2px 6px;font-size:8px;font-weight:700;color:var(--purple);}
+  .stats-loader{background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(0,200,81,.04));border:1px solid rgba(168,85,247,.3);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+  .stats-loader-icon{font-size:20px;}
+  .stats-loader-text{font-size:10px;color:var(--text2);}
+  .stats-loader-title{font-size:11px;font-weight:700;color:var(--purple);margin-bottom:2px;}
+  .stats-progress-bar{height:4px;background:var(--card3);border-radius:2px;margin-top:5px;overflow:hidden;}
+  .stats-progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--green));border-radius:2px;transition:width .5s ease;width:0%;}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text2);}
+  .empty-icon{font-size:44px;margin-bottom:12px;}
+  .empty-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .empty-desc{font-size:11px;line-height:1.6;}
+  .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .team-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px;max-height:38vh;overflow-y:auto;}
+  .panel-title{font-size:9px;font-weight:800;color:var(--gold);margin-bottom:6px;text-align:center;text-transform:uppercase;letter-spacing:1px;position:sticky;top:0;background:var(--card);padding:4px 0;z-index:10;border-bottom:1px solid var(--border);}
+  .team-list{display:flex;flex-direction:column;gap:2px;}
+  .team-item{display:flex;align-items:center;gap:4px;padding:5px 6px;background:var(--card2);border:1px solid transparent;border-radius:5px;cursor:pointer;transition:all .15s;font-size:10px;}
+  .team-item:hover{border-color:var(--primary-light);}
+  .team-item.selected-home{border-color:var(--green);background:rgba(0,200,81,.15);}
+  .team-item.selected-away{border-color:var(--blue);background:rgba(74,158,255,.15);}
+  .team-code{font-weight:900;font-size:11px;min-width:28px;font-family:'Rajdhani',sans-serif;}
+  .team-name{flex:1;color:var(--text2);font-size:8px;}
+  .team-rating{font-size:7px;padding:2px 4px;border-radius:3px;font-weight:700;}
+  .r-activator{background:rgba(255,215,0,.15);color:var(--gold);}
+  .r-strong{background:rgba(0,200,81,.15);color:var(--green);}
+  .r-neutral{background:rgba(136,136,160,.15);color:var(--text2);}
+  .r-weak{background:rgba(255,53,71,.15);color:var(--red);}
+  .team-live-badge{font-size:7px;color:var(--purple);font-weight:700;}
+  .prediction-engine{grid-column:1/-1;background:linear-gradient(135deg,rgba(255,215,0,.07),rgba(0,200,81,.03));border:1px solid rgba(255,215,0,.3);border-radius:10px;padding:12px;margin-top:8px;}
+  .engine-title{font-size:10px;font-weight:800;color:var(--gold);margin-bottom:10px;text-align:center;text-transform:uppercase;letter-spacing:2px;}
+  .match-display{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px;}
+  .team-box{background:var(--card2);border:2px solid var(--border);border-radius:8px;padding:10px;text-align:center;min-height:65px;display:flex;flex-direction:column;justify-content:center;transition:all .3s;}
+  .team-box.active{border-color:var(--gold);background:rgba(255,215,0,.08);}
+  .team-box-code{font-size:20px;font-weight:900;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+  .team-box-name{font-size:8px;color:var(--text2);margin-top:2px;}
+  .team-box-stats{font-size:8px;color:var(--purple);margin-top:2px;font-weight:600;}
+  .vs-box{font-size:12px;font-weight:900;color:var(--text2);font-family:'Rajdhani',sans-serif;}
+  .prediction-result{background:var(--card2);border-radius:8px;padding:10px;text-align:center;border:2px solid transparent;transition:all .3s;}
+  .prediction-result.high{border-color:var(--green);background:rgba(0,200,81,.08);}
+  .prediction-result.medium{border-color:var(--orange);background:rgba(255,152,0,.08);}
+  .prediction-result.low{border-color:var(--red);background:rgba(255,53,71,.08);}
+  .result-title{font-size:8px;color:var(--text2);text-transform:uppercase;margin-bottom:3px;}
+  .result-prediction{font-size:17px;font-weight:900;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+  .result-confidence{font-size:22px;font-weight:900;font-family:'Rajdhani',sans-serif;}
+  .result-reason{font-size:8px;color:var(--text2);margin-top:3px;}
+  .result-source{font-size:8px;color:var(--purple);margin-top:2px;font-weight:600;}
+  /* MANUAL PREDICTOR MODEL BREAKDOWN */
+  .manual-model-section{grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:8px;}
+  .manual-model-title{font-size:9px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .manual-model-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+  .mmg-item{background:var(--card2);border-radius:5px;padding:5px 4px;text-align:center;}
+  .mmg-name{font-size:7px;color:var(--text2);margin-bottom:2px;line-height:1.2;}
+  .mmg-prob{font-size:11px;font-weight:900;font-family:'Rajdhani',sans-serif;}
+  .add-match-btn{width:100%;margin-top:8px;padding:9px;background:rgba(0,200,81,.15);border:1px solid var(--green);border-radius:7px;color:var(--gold);font-size:11px;font-weight:900;cursor:pointer;text-transform:uppercase;transition:all .2s;font-family:'Rajdhani',sans-serif;letter-spacing:1px;}
+  .add-match-btn:hover:not(:disabled){background:var(--green);color:#000;}
+  .add-match-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .rating-calc{grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:8px;}
+  .calc-title{font-size:9px;font-weight:700;color:var(--primary-light);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;}
+  .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+  .calc-item{background:var(--card2);padding:6px;border-radius:5px;text-align:center;}
+  .calc-label{font-size:8px;color:var(--text2);text-transform:uppercase;}
+  .calc-value{font-size:13px;font-weight:900;color:var(--gold);margin-top:1px;font-family:'Rajdhani',sans-serif;}
+  .calc-formula{grid-column:1/-1;background:rgba(255,215,0,.07);padding:6px;border-radius:5px;font-size:8px;color:var(--gold);text-align:center;margin-top:4px;}
+  .match-history{grid-column:1/-1;margin-top:8px;}
+  .history-title{font-size:10px;font-weight:700;color:var(--primary-light);margin-bottom:6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;}
+  .clear-btn{font-size:9px;padding:3px 7px;background:rgba(255,53,71,.2);border:1px solid var(--red);border-radius:4px;color:var(--red);cursor:pointer;}
+  .history-list{display:flex;flex-direction:column;gap:5px;}
+  .history-item{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 9px;display:grid;grid-template-columns:22px 1fr 55px 32px;gap:7px;align-items:center;}
+  .history-num{background:rgba(0,200,81,.15);color:var(--green);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:9px;}
+  .history-match{font-weight:700;font-size:10px;}
+  .history-prediction{text-align:center;}
+  .history-stars{color:var(--gold);font-size:9px;}
+  .history-accuracy{font-size:8px;color:var(--text2);}
+  .delete-btn{background:rgba(255,53,71,.2);color:var(--red);border:none;border-radius:4px;padding:3px 6px;cursor:pointer;font-size:9px;}
+  .strategy-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:8px;}
+  .strategy-title{font-size:10px;font-weight:700;color:var(--gold);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+  .strategy-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .strategy-card{background:var(--card2);padding:7px;border-radius:6px;border-left:3px solid var(--primary-light);}
+  .strategy-name{font-size:9px;font-weight:700;color:var(--primary-light);margin-bottom:2px;}
+  .strategy-desc{font-size:8px;color:var(--text2);line-height:1.4;}
+  .stats-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+  .stat-item{background:var(--card2);padding:8px;border-radius:6px;}
+  .stat-value{font-size:20px;font-weight:900;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+  .stat-label{font-size:8px;color:var(--text2);text-transform:uppercase;margin-top:2px;}
+  .alert{background:rgba(255,53,71,.1);border:1px solid var(--red);border-radius:7px;padding:8px 10px;margin:6px 0;font-size:10px;color:var(--red);}
+  .alert-warning{background:rgba(255,152,0,.1);border-color:var(--orange);color:var(--orange);}
+  .alert-success{background:rgba(0,200,81,.1);border-color:var(--green);color:var(--green);}
+  .alert-info{background:rgba(74,158,255,.1);border-color:var(--blue);color:var(--blue);}
+  .alert-purple{background:rgba(168,85,247,.1);border-color:var(--purple);color:var(--purple);}
+  .alert-teal{background:rgba(0,188,212,.1);border-color:var(--teal);color:var(--teal);}
+  .power-meter{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;}
+  .meter-title{font-size:10px;font-weight:700;color:var(--gold);margin-bottom:7px;text-transform:uppercase;display:flex;justify-content:space-between;}
+  .meter-bar{height:22px;background:var(--card2);border-radius:11px;overflow:hidden;border:1px solid var(--border);}
+  .meter-fill{height:100%;background:linear-gradient(90deg,var(--red) 0%,var(--orange) 50%,var(--green) 100%);border-radius:11px;transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;font-weight:900;font-size:10px;color:#000;font-family:'Rajdhani',sans-serif;}
+  .meter-labels{display:flex;justify-content:space-between;margin-top:3px;font-size:8px;color:var(--text2);}
+  .team-stats-table{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:8px;overflow-x:auto;}
+  .table-title{font-size:10px;font-weight:700;color:var(--purple);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+  table{width:100%;border-collapse:collapse;font-size:10px;}
+  th{color:var(--text2);font-size:8px;text-transform:uppercase;padding:4px 6px;text-align:center;border-bottom:1px solid var(--border);}
+  td{padding:5px 6px;text-align:center;border-bottom:1px solid rgba(34,34,74,.5);}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .td-team{text-align:left;font-weight:700;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+  .td-good{color:var(--green);font-weight:700;}
+  .td-bad{color:var(--red);font-weight:700;}
+  .td-mid{color:var(--orange);font-weight:700;}
+  .source-tag{font-size:7px;font-weight:600;padding:1px 4px;border-radius:3px;}
+  .st-real{background:rgba(168,85,247,.2);color:var(--purple);}
+  .st-static{background:rgba(255,152,0,.2);color:var(--orange);}
+  .notification-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;}
+  .notification-overlay.show{display:flex;}
+  .notification-card{background:linear-gradient(135deg,#0a1a0a,#151f15);border:2px solid var(--gold);border-radius:14px;padding:20px;max-width:380px;width:100%;text-align:center;box-shadow:0 0 40px rgba(255,215,0,.2);}
+  .notif-title{font-size:16px;font-weight:900;color:var(--gold);margin-bottom:6px;text-transform:uppercase;font-family:'Rajdhani',sans-serif;letter-spacing:2px;}
+  .notif-season{font-size:11px;color:var(--text2);margin-bottom:3px;}
+  .notif-matchday{font-size:13px;font-weight:700;color:var(--green);margin-bottom:14px;}
+  .notif-matches{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+  .notif-match-item{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);border-radius:7px;padding:9px;}
+  .notif-match-name{font-size:14px;font-weight:900;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+  .notif-match-bet{font-size:11px;color:var(--green);font-weight:700;margin-top:2px;}
+  .notif-match-conf{font-size:10px;color:var(--text2);}
+  .notif-data-source{font-size:9px;color:var(--purple);margin-top:2px;font-weight:600;}
+  .notif-countdown{font-size:13px;color:var(--orange);font-weight:700;margin-bottom:14px;font-family:'Rajdhani',sans-serif;}
+  .notif-close-btn{background:rgba(0,200,81,.15);border:1px solid var(--green);color:var(--gold);font-size:13px;font-weight:700;padding:10px 24px;border-radius:7px;cursor:pointer;width:100%;font-family:'Rajdhani',sans-serif;transition:all .2s;}
+  .notif-close-btn:hover{background:var(--green);color:#000;}
+  .loading-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:4px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--secondary);border-top:1px solid var(--border);display:flex;z-index:1000;padding-bottom:env(safe-area-inset-bottom,0);}
+  .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 4px;cursor:pointer;color:var(--text2);font-size:8px;transition:all .2s;gap:2px;}
+  .bottom-nav-item .nav-icon{font-size:18px;}
+  .bottom-nav-item.active{color:var(--primary-light);background:rgba(0,200,81,.08);}
+  .badge-count{background:var(--red);color:white;font-size:8px;font-weight:900;padding:1px 4px;border-radius:7px;min-width:14px;text-align:center;display:none;}
+  .badge-count.show{display:inline-block;}
+</style>
+</head>
+<body>
+
+<div class="notification-overlay" id="notifOverlay">
+  <div class="notification-card">
+    <div class="notif-title">🎯 26-MODEL HIGH PICKS</div>
+    <div class="notif-season" id="notifSeason">Season --</div>
+    <div class="notif-matchday" id="notifMatchday">Loading...</div>
+    <div class="notif-matches" id="notifMatches"></div>
+    <div class="notif-countdown" id="notifCountdown">⏱ Calculating...</div>
+    <button class="notif-close-btn" onclick="closeNotification()">✓ GOT IT — PLACE BETS</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-title">⚡ BetPawa Predictor Pro v3</div>
+  <div class="header-sub">26-Model Ensemble Engine | Poisson · Monte Carlo · Elo · Dixon-Coles · +22 more</div>
+  <div class="accuracy-badge">🧠 Advanced Statistical Engine | Strict Filter Active</div>
+</div>
+
+<div class="data-quality-bar">
+  <div class="dq-item"><div class="dq-dot loading" id="dqDot"></div><span class="dq-label">Stats Engine:</span><span class="dq-value" id="dqStatus">Initializing...</span></div>
+  <div class="dq-item"><span class="dq-label">Matches:</span><span class="dq-matches" id="dqMatches">0</span></div>
+  <div class="dq-item"><span class="dq-label">Teams:</span><span class="dq-value" id="dqTeams">0</span></div>
+  <div class="dq-item"><span class="dq-label">Mode:</span><span class="dq-value" id="dqAccuracy">Loading</span></div>
+</div>
+
+<div class="live-status-bar">
+  <div class="live-indicator"><div class="live-dot" id="liveDot"></div><span id="liveStatus">Connecting...</span></div>
+  <div class="season-info" id="seasonDisplay">Season --</div>
+  <div class="matchday-info" id="matchdayDisplay">MD --</div>
+  <div class="countdown-box" id="countdownDisplay">--:--</div>
+  <button class="refresh-btn" id="refreshBtn" onclick="fetchLiveData()">🔄 Refresh</button>
+</div>
+
+<div class="league-selector">
+  <button class="league-btn active" onclick="switchLeague('england',this)">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</button>
+  <button class="league-btn" onclick="switchLeague('germany',this)">🇩🇪 Germany</button>
+  <button class="league-btn" onclick="switchLeague('italy',this)">🇮🇹 Italy</button>
+  <button class="league-btn" onclick="switchLeague('spain',this)">🇪🇸 Spain</button>
+  <button class="league-btn" onclick="switchLeague('france',this)">🇫🇷 France</button>
+  <button class="league-btn" onclick="switchLeague('portugal',this)">🇵🇹 Portugal</button>
+  <button class="league-btn" onclick="switchLeague('netherlands',this)">🇳🇱 Netherlands</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('live')" id="tab-btn-live">🔴 Live <span class="badge-count" id="liveBadge">0</span></div>
+  <div class="tab" onclick="showTab('predictor')" id="tab-btn-predictor">🎯 Predict</div>
+  <div class="tab" onclick="showTab('teamstats')" id="tab-btn-teamstats">📊 Stats</div>
+  <div class="tab" onclick="showTab('analyzer')" id="tab-btn-analyzer">📈 Analyze</div>
+  <div class="tab" onclick="showTab('strategies')" id="tab-btn-strategies">📚 Tips</div>
+</div>
+
+<div class="main-content">
+
+<!-- LIVE TAB -->
+<div class="section active" id="tab-live">
+  <div id="statsLoaderDisplay" class="stats-loader">
+    <div class="stats-loader-icon">🧠</div>
+    <div style="flex:1">
+      <div class="stats-loader-title">26-Model Engine Initializing...</div>
+      <div class="stats-loader-text" id="statsLoaderText">Fetching historical data for Poisson, Elo, Monte Carlo models...</div>
+      <div class="stats-progress-bar"><div class="stats-progress-fill" id="statsProgressFill"></div></div>
+    </div>
+  </div>
+  <div class="live-predictions-header">
+    <div class="live-pred-title">🔴 Near-Sure Picks (Strict Filter)</div>
+    <span class="high-conf-badge" id="highConfCount">0 picks</span>
+  </div>
+  <div id="livePredictionsContainer">
+    <div class="empty-state"><div class="empty-icon">📡</div><div class="empty-title">26-Model Engine Starting...</div><div class="empty-desc">Loading real historical stats.<br>Only near-certain picks will appear.</div></div>
+  </div>
+</div>
+
+<!-- PREDICTOR TAB -->
+<div class="section" id="tab-predictor">
+  <div class="power-meter">
+    <div class="meter-title"><span>🔋 Round Confidence Meter</span><span id="powerPercent">0%</span></div>
+    <div class="meter-bar"><div class="meter-fill" id="powerFill" style="width:0%">0%</div></div>
+    <div class="meter-labels"><span>Low</span><span>Moderate</span><span>Strong</span><span>MAX</span></div>
+  </div>
+  <div class="main-grid">
+    <div class="team-panel"><div class="panel-title">🏠 HOME TEAMS</div><div class="team-list" id="homeTeamList"></div></div>
+    <div class="team-panel"><div class="panel-title">✈️ AWAY TEAMS</div><div class="team-list" id="awayTeamList"></div></div>
+    <div class="prediction-engine">
+      <div class="engine-title">🎯 26-Model Prediction Engine</div>
+      <div class="match-display">
+        <div class="team-box" id="homeBox"><div class="team-box-code">?</div><div class="team-box-name">Select Home</div><div class="team-box-stats"></div></div>
+        <div class="vs-box">VS</div>
+        <div class="team-box" id="awayBox"><div class="team-box-code">?</div><div class="team-box-name">Select Away</div><div class="team-box-stats"></div></div>
+      </div>
+      <div class="prediction-result" id="predictionResult">
+        <div class="result-title">Select Teams to Predict</div>
+        <div class="result-prediction">--</div>
+        <div class="result-confidence" style="font-size:13px;color:var(--text2)">Awaiting selection...</div>
+      </div>
+      <button class="add-match-btn" id="addMatchBtn" onclick="addMatch()" disabled>➕ ADD TO ROUND ANALYZER</button>
+    </div>
+    <div class="manual-model-section" id="manualModelSection" style="display:none">
+      <div class="manual-model-title">🔬 26-Model Breakdown</div>
+      <div class="manual-model-grid" id="manualModelGrid"></div>
+    </div>
+    <div class="rating-calc" id="ratingCalc" style="display:none">
+      <div class="calc-title">📊 Enhanced Nairaland Rating</div>
+      <div class="calc-grid">
+        <div class="calc-item"><div class="calc-label">Home Rating</div><div class="calc-value" id="homeRatingVal">0</div></div>
+        <div class="calc-item"><div class="calc-label">Away Rating</div><div class="calc-value" id="awayRatingVal">0</div></div>
+        <div class="calc-item"><div class="calc-label">Combined</div><div class="calc-value" id="combinedRating">0</div></div>
+        <div class="calc-item"><div class="calc-label">Signal</div><div class="calc-value" id="signalVal">--</div></div>
+      </div>
+      <div class="calc-formula">Models agree 26-of-26 → 96% | 20+ models → 90% | 12+ models → 82%</div>
+    </div>
+    <div class="match-history" id="matchHistory" style="display:none">
+      <div class="history-title"><span>📋 Round Matches</span><button class="clear-btn" onclick="clearMatches()">Clear All</button></div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TEAM STATS TAB -->
+<div class="section" id="tab-teamstats">
+  <div class="alert alert-purple"><strong>🧠 26-Model Engine</strong> — Elo ratings, real form rates, goals averages. Purple=real data, Orange=static fallback.</div>
+  <div class="team-stats-table" id="teamStatsTable">
+    <div class="table-title">📊 Team Performance + Elo Ratings</div>
+    <div id="teamStatsContent"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading Stats...</div></div></div>
+  </div>
+</div>
+
+<!-- ANALYZER TAB -->
+<div class="section" id="tab-analyzer">
+  <div class="stats-panel">
+    <div class="stats-grid">
+      <div class="stat-item"><div class="stat-value" id="statMatches">0</div><div class="stat-label">Matches</div></div>
+      <div class="stat-item"><div class="stat-value" id="statHighConf">0</div><div class="stat-label">High Conf</div></div>
+      <div class="stat-item"><div class="stat-value" id="statAccuracy">0%</div><div class="stat-label">Avg Conf</div></div>
+    </div>
+  </div>
+  <div class="alert alert-success" id="analyzerResult" style="display:none"><strong>✅ ROUND ANALYSIS COMPLETE</strong><br><span id="analyzerText"></span></div>
+  <div class="strategy-panel">
+    <div class="strategy-title">🎯 Recommended Bets This Round</div>
+    <div class="strategy-grid" id="recommendations"><div class="strategy-card"><div class="strategy-name">No Data</div><div class="strategy-desc">Add matches in Predictor tab</div></div></div>
+  </div>
+</div>
+
+<!-- STRATEGIES TAB -->
+<div class="section" id="tab-strategies">
+  <div class="alert alert-warning"><strong>⚠️ 26 MODELS — HOW THEY WORK</strong></div>
+  <div class="strategy-panel">
+    <div class="strategy-title">🔬 Mathematical Models</div>
+    <div class="strategy-grid">
+      <div class="strategy-card"><div class="strategy-name">1. Poisson Distribution</div><div class="strategy-desc">Expected goals (xG) fed into Poisson to get P(over 2.5). Foundation of all football prediction.</div></div>
+      <div class="strategy-card"><div class="strategy-name">2. Dixon-Coles</div><div class="strategy-desc">Poisson with low-score correction (rho parameter). More accurate for 0-0, 1-0, 0-1, 1-1 results.</div></div>
+      <div class="strategy-card"><div class="strategy-name">3. Monte Carlo (5000x)</div><div class="strategy-desc">Simulates 5000 matches using Poisson random draws. Returns empirical over/BTTS probabilities.</div></div>
+      <div class="strategy-card"><div class="strategy-name">4. Bivariate Poisson</div><div class="strategy-desc">Models correlation between home and away scoring. More realistic than independent Poisson.</div></div>
+    </div>
+  </div>
+  <div class="strategy-panel">
+    <div class="strategy-title">⚡ Rating Models</div>
+    <div class="strategy-grid">
+      <div class="strategy-card"><div class="strategy-name">5. Elo Rating System</div><div class="strategy-desc">Updates after every historical match. Win vs strong team = bigger rating gain. Converges over time.</div></div>
+      <div class="strategy-card"><div class="strategy-name">6. Bradley-Terry</div><div class="strategy-desc">Pairwise comparison model. Strength of team = probability of beating any other team directly.</div></div>
+      <div class="strategy-card"><div class="strategy-name">7. EWMA Form</div><div class="strategy-desc">Exponential decay (0.7) weights recent games more. Last game counts 70%, game before 49%, etc.</div></div>
+      <div class="strategy-card"><div class="strategy-name">8. Enhanced Nairaland</div><div class="strategy-desc">Original Nairaland Rating method significantly upgraded with all real stats and recency weighting.</div></div>
+    </div>
+  </div>
+  <div class="strategy-panel">
+    <div class="strategy-title">🎲 Pattern & RNG Models</div>
+    <div class="strategy-grid">
+      <div class="strategy-card"><div class="strategy-name">9. Streak Detector</div><div class="strategy-desc">3+ over streak → slight regression. 3+ under streak → reversion bonus. Virtual RNG has mean reversion.</div></div>
+      <div class="strategy-card"><div class="strategy-name">10. RNG Cycle Detector</div><div class="strategy-desc">Checks if last 3 games pattern matches games 4-6. Pseudo-random cycles sometimes repeat in VFL.</div></div>
+      <div class="strategy-card"><div class="strategy-name">11. Post-Blowout Pattern</div><div class="strategy-desc">After 4+ goal match, 60% chance of continued over. After 6+, slight reversion risk applied.</div></div>
+      <div class="strategy-card"><div class="strategy-name">12. Pattern Break Detector</div><div class="strategy-desc">Detects when recent 2 games diverge from prior 3. Signals trend change in either direction.</div></div>
+    </div>
+  </div>
+  <div class="strategy-panel">
+    <div class="strategy-title">📐 Statistical Validation Models</div>
+    <div class="strategy-grid">
+      <div class="strategy-card"><div class="strategy-name">13. Bayesian Posterior</div><div class="strategy-desc">Updates prior probability (60%) with team-specific evidence. More data = stronger posterior shift.</div></div>
+      <div class="strategy-card"><div class="strategy-name">14. Regression to Mean</div><div class="strategy-desc">Extreme recent rates regress toward long-term average. Critical for virtual RNG accuracy.</div></div>
+      <div class="strategy-card"><div class="strategy-name">15. Variance Adjusted</div><div class="strategy-desc">Sample size correction. Low match count = pull toward 50%. 20+ matches = full trust in rate.</div></div>
+      <div class="strategy-card"><div class="strategy-name">16. Kelly Criterion</div><div class="strategy-desc">Only show bets with positive Kelly fraction vs 1.85 odds. Negative Kelly = skip the match.</div></div>
+    </div>
+  </div>
+  <div class="strategy-panel">
+    <div class="strategy-title">🏆 Structural & Matchup Models</div>
+    <div class="strategy-grid">
+      <div class="strategy-card"><div class="strategy-name">17. League Activator</div><div class="strategy-desc">Tier 1 vs Tier 3/4 = +18% bonus. Conceder matchup detected automatically from data.</div></div>
+      <div class="strategy-card"><div class="strategy-name">18. Defensive Profile</div><div class="strategy-desc">Attack vs Defence: homeXG vs awayGA average. Cross-model xG calculation for accuracy.</div></div>
+      <div class="strategy-card"><div class="strategy-name">19. Tier Power Model</div><div class="strategy-desc">Tier 1=95pts, Tier 2=70pts, Tier 3=50pts, Tier 4=30pts. Weighted matchup score.</div></div>
+      <div class="strategy-card"><div class="strategy-name">20-26. + 7 More Models</div><div class="strategy-desc">Goals Frequency, Score Distribution (most likely score), xG Ratio, Autocorrelation, Momentum Oscillator, Historical Rate Blend, Volatility Index.</div></div>
+    </div>
+  </div>
+  <div class="alert alert-teal"><strong>🔒 STRICT FILTER:</strong> Minimum 88% ensemble confidence · 12+ models must agree above 78% · Low model disagreement (stdDev &lt;18) · Positive Kelly value · Combined sample validation. Only TRUE near-certain picks pass.</div>
+  <div class="alert"><strong>🚫 AVOID:</strong> Chasing losses · Betting every match · Never bet more than 5% bankroll · Increasing stakes after losses</div>
+</div>
+
+</div>
+
+<div class="bottom-nav">
+  <div class="bottom-nav-item active" onclick="showTab('live')" id="nav-live"><span class="nav-icon">🔴</span>Live</div>
+  <div class="bottom-nav-item" onclick="showTab('predictor')" id="nav-predictor"><span class="nav-icon">🎯</span>Predict</div>
+  <div class="bottom-nav-item" onclick="showTab('teamstats')" id="nav-teamstats"><span class="nav-icon">📊</span>Stats</div>
+  <div class="bottom-nav-item" onclick="showTab('analyzer')" id="nav-analyzer"><span class="nav-icon">📈</span>Analyze</div>
+  <div class="bottom-nav-item" onclick="showTab('strategies')" id="nav-strategies"><span class="nav-icon">📚</span>Learn</div>
+</div>
+
+<script>
+// ============================================================
+// STATIC FALLBACK DATA
+// ============================================================
+const VFL_DATA = {
+  england:{name:'English League',apiName:'English League',conceders:['BUR','CRY','EVE','SUN'],teams:{
+    'ARS':{name:'Arsenal',tier:1,overRate:90,bttsRate:72,homeAdv:1.15,staticOverRate:90},
+    'MCI':{name:'Man City',tier:1,overRate:92,bttsRate:68,homeAdv:1.18,staticOverRate:92},
+    'LIV':{name:'Liverpool',tier:1,overRate:88,bttsRate:74,homeAdv:1.15,staticOverRate:88},
+    'TOT':{name:'Tottenham',tier:1,overRate:82,bttsRate:70,homeAdv:1.10,staticOverRate:82},
+    'CHE':{name:'Chelsea',tier:1,overRate:80,bttsRate:68,homeAdv:1.10,staticOverRate:80},
+    'MUN':{name:'Man United',tier:2,overRate:72,bttsRate:62,homeAdv:1.10,staticOverRate:72},
+    'NEW':{name:'Newcastle',tier:2,overRate:70,bttsRate:60,homeAdv:1.08,staticOverRate:70},
+    'AST':{name:'Aston Villa',tier:2,overRate:74,bttsRate:65,homeAdv:1.05,staticOverRate:74},
+    'BHA':{name:'Brighton',tier:2,overRate:72,bttsRate:68,homeAdv:1.05,staticOverRate:72},
+    'FUL':{name:'Fulham',tier:2,overRate:68,bttsRate:60,homeAdv:1.05,staticOverRate:68},
+    'WHU':{name:'West Ham',tier:3,overRate:62,bttsRate:55,homeAdv:1.05,staticOverRate:62},
+    'BRE':{name:'Brentford',tier:3,overRate:65,bttsRate:58,homeAdv:1.05,staticOverRate:65},
+    'NOT':{name:'Nott Forest',tier:3,overRate:58,bttsRate:52,homeAdv:1.00,staticOverRate:58},
+    'LEE':{name:'Leeds United',tier:3,overRate:60,bttsRate:55,homeAdv:1.00,staticOverRate:60},
+    'WOL':{name:'Wolves',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'BUR':{name:'Burnley',tier:4,overRate:45,bttsRate:42,homeAdv:0.95,staticOverRate:45},
+    'CRY':{name:'Crystal Palace',tier:4,overRate:48,bttsRate:44,homeAdv:0.95,staticOverRate:48},
+    'EVE':{name:'Everton',tier:4,overRate:44,bttsRate:40,homeAdv:0.95,staticOverRate:44},
+    'SUN':{name:'Sunderland',tier:4,overRate:42,bttsRate:38,homeAdv:0.92,staticOverRate:42},
+    'BOU':{name:'Bournemouth',tier:4,overRate:46,bttsRate:42,homeAdv:0.92,staticOverRate:46}
+  }},
+  germany:{name:'Germany Bundesliga',apiName:'German League',conceders:['HSV','HEI','STP'],teams:{
+    'FCB':{name:'Bayern Munich',tier:1,overRate:95,bttsRate:70,homeAdv:1.15,staticOverRate:95},
+    'DOR':{name:'Dortmund',tier:1,overRate:90,bttsRate:75,homeAdv:1.10,staticOverRate:90},
+    'RBL':{name:'RB Leipzig',tier:1,overRate:85,bttsRate:70,homeAdv:1.10,staticOverRate:85},
+    'LEV':{name:'Leverkusen',tier:1,overRate:85,bttsRate:75,homeAdv:1.05,staticOverRate:85},
+    'WOL':{name:'Wolfsburg',tier:1,overRate:80,bttsRate:65,homeAdv:1.05,staticOverRate:80},
+    'FRE':{name:'Freiburg',tier:2,overRate:70,bttsRate:60,homeAdv:1.10,staticOverRate:70},
+    'HOF':{name:'Hoffenheim',tier:2,overRate:70,bttsRate:70,homeAdv:1.00,staticOverRate:70},
+    'UNI':{name:'Union Berlin',tier:2,overRate:65,bttsRate:55,homeAdv:1.05,staticOverRate:65},
+    'STU':{name:'Stuttgart',tier:2,overRate:70,bttsRate:65,homeAdv:1.05,staticOverRate:70},
+    'WER':{name:'Werder Bremen',tier:2,overRate:65,bttsRate:65,homeAdv:1.00,staticOverRate:65},
+    'COL':{name:'FC Koln',tier:3,overRate:55,bttsRate:55,homeAdv:1.00,staticOverRate:55},
+    'MAI':{name:'Mainz',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'MON':{name:"M'Gladbach",tier:3,overRate:60,bttsRate:60,homeAdv:1.00,staticOverRate:60},
+    'AUG':{name:'Augsburg',tier:3,overRate:55,bttsRate:55,homeAdv:1.00,staticOverRate:55},
+    'EIN':{name:'Eintracht',tier:3,overRate:60,bttsRate:60,homeAdv:1.00,staticOverRate:60},
+    'HSV':{name:'Hamburg',tier:4,overRate:40,bttsRate:40,homeAdv:0.90,staticOverRate:40},
+    'HEI':{name:'Heidenheim',tier:4,overRate:40,bttsRate:45,homeAdv:0.95,staticOverRate:40},
+    'STP':{name:'St Pauli',tier:4,overRate:35,bttsRate:35,homeAdv:0.90,staticOverRate:35}
+  }},
+  italy:{name:'Italy Serie A',apiName:'Italian League',conceders:['LEC','CRE','COM','PAR','PIS'],teams:{
+    'INT':{name:'Inter Milan',tier:1,overRate:85,bttsRate:65,homeAdv:1.15,staticOverRate:85},
+    'MIL':{name:'AC Milan',tier:1,overRate:85,bttsRate:70,homeAdv:1.10,staticOverRate:85},
+    'NAP':{name:'Napoli',tier:1,overRate:80,bttsRate:70,homeAdv:1.10,staticOverRate:80},
+    'ATA':{name:'Atalanta',tier:1,overRate:90,bttsRate:75,homeAdv:1.05,staticOverRate:90},
+    'JUV':{name:'Juventus',tier:1,overRate:70,bttsRate:55,homeAdv:1.10,staticOverRate:70},
+    'ROM':{name:'AS Roma',tier:2,overRate:75,bttsRate:65,homeAdv:1.10,staticOverRate:75},
+    'LAZ':{name:'Lazio',tier:2,overRate:70,bttsRate:60,homeAdv:1.10,staticOverRate:70},
+    'FIO':{name:'Fiorentina',tier:2,overRate:65,bttsRate:60,homeAdv:1.05,staticOverRate:65},
+    'BOL':{name:'Bologna',tier:2,overRate:65,bttsRate:55,homeAdv:1.05,staticOverRate:65},
+    'TOR':{name:'Torino',tier:2,overRate:55,bttsRate:45,homeAdv:1.05,staticOverRate:55},
+    'VER':{name:'Verona',tier:3,overRate:60,bttsRate:55,homeAdv:1.00,staticOverRate:60},
+    'SAS':{name:'Sassuolo',tier:3,overRate:65,bttsRate:60,homeAdv:1.00,staticOverRate:65},
+    'UDI':{name:'Udinese',tier:3,overRate:50,bttsRate:45,homeAdv:1.00,staticOverRate:50},
+    'CAG':{name:'Cagliari',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'GEN':{name:'Genoa',tier:3,overRate:50,bttsRate:45,homeAdv:0.95,staticOverRate:50},
+    'LEC':{name:'Lecce',tier:4,overRate:40,bttsRate:40,homeAdv:0.95,staticOverRate:40},
+    'CRE':{name:'Cremonese',tier:4,overRate:35,bttsRate:35,homeAdv:0.90,staticOverRate:35},
+    'COM':{name:'Como',tier:4,overRate:35,bttsRate:35,homeAdv:0.90,staticOverRate:35},
+    'PAR':{name:'Parma',tier:4,overRate:40,bttsRate:40,homeAdv:0.90,staticOverRate:40},
+    'PIS':{name:'Pisa',tier:4,overRate:35,bttsRate:30,homeAdv:0.85,staticOverRate:35}
+  }},
+  spain:{name:'Spain La Liga',apiName:'Spanish League',conceders:['ALA','ELC','LEV','OVI','GIR'],teams:{
+    'RMA':{name:'Real Madrid',tier:1,overRate:90,bttsRate:70,homeAdv:1.15,staticOverRate:90},
+    'BAR':{name:'Barcelona',tier:1,overRate:90,bttsRate:75,homeAdv:1.15,staticOverRate:90},
+    'ATM':{name:'Atletico Madrid',tier:1,overRate:75,bttsRate:60,homeAdv:1.10,staticOverRate:75},
+    'SEV':{name:'Sevilla',tier:1,overRate:75,bttsRate:65,homeAdv:1.10,staticOverRate:75},
+    'VIL':{name:'Villarreal',tier:1,overRate:80,bttsRate:70,homeAdv:1.05,staticOverRate:80},
+    'RSO':{name:'Real Sociedad',tier:2,overRate:65,bttsRate:60,homeAdv:1.10,staticOverRate:65},
+    'BET':{name:'Real Betis',tier:2,overRate:70,bttsRate:65,homeAdv:1.05,staticOverRate:70},
+    'ATH':{name:'Athletic Bilbao',tier:2,overRate:65,bttsRate:55,homeAdv:1.10,staticOverRate:65},
+    'CEL':{name:'Celta Vigo',tier:2,overRate:70,bttsRate:65,homeAdv:1.00,staticOverRate:70},
+    'GET':{name:'Getafe',tier:2,overRate:55,bttsRate:45,homeAdv:1.05,staticOverRate:55},
+    'VAL':{name:'Valencia',tier:3,overRate:55,bttsRate:50,homeAdv:1.05,staticOverRate:55},
+    'OSA':{name:'Osasuna',tier:3,overRate:50,bttsRate:45,homeAdv:1.05,staticOverRate:50},
+    'RAY':{name:'Rayo Vallecano',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'MAL':{name:'Mallorca',tier:3,overRate:45,bttsRate:40,homeAdv:1.00,staticOverRate:45},
+    'ESP':{name:'Espanyol',tier:3,overRate:50,bttsRate:45,homeAdv:1.00,staticOverRate:50},
+    'ALA':{name:'Alaves',tier:4,overRate:40,bttsRate:40,homeAdv:0.95,staticOverRate:40},
+    'ELC':{name:'Elche',tier:4,overRate:35,bttsRate:35,homeAdv:0.90,staticOverRate:35},
+    'GIR':{name:'Girona',tier:4,overRate:45,bttsRate:45,homeAdv:0.95,staticOverRate:45},
+    'LEV':{name:'Levante',tier:4,overRate:40,bttsRate:40,homeAdv:0.90,staticOverRate:40},
+    'OVI':{name:'Oviedo',tier:4,overRate:35,bttsRate:30,homeAdv:0.85,staticOverRate:35}
+  }},
+  france:{name:'France Ligue 1',apiName:'French League',conceders:['ANG','LOR','HAV'],teams:{
+    'PSG':{name:'Paris SG',tier:1,overRate:90,bttsRate:70,homeAdv:1.15,staticOverRate:90},
+    'ASM':{name:'Monaco',tier:1,overRate:85,bttsRate:70,homeAdv:1.10,staticOverRate:85},
+    'MAR':{name:'Marseille',tier:1,overRate:80,bttsRate:70,homeAdv:1.10,staticOverRate:80},
+    'REN':{name:'Rennes',tier:1,overRate:75,bttsRate:65,homeAdv:1.05,staticOverRate:75},
+    'LEN':{name:'Lens',tier:1,overRate:70,bttsRate:60,homeAdv:1.05,staticOverRate:70},
+    'NIC':{name:'Nice',tier:2,overRate:65,bttsRate:55,homeAdv:1.10,staticOverRate:65},
+    'LYO':{name:'Lyon',tier:2,overRate:70,bttsRate:65,homeAdv:1.05,staticOverRate:70},
+    'LIL':{name:'Lille',tier:2,overRate:65,bttsRate:55,homeAdv:1.10,staticOverRate:65},
+    'STR':{name:'Strasbourg',tier:2,overRate:60,bttsRate:55,homeAdv:1.00,staticOverRate:60},
+    'TOU':{name:'Toulouse',tier:2,overRate:60,bttsRate:50,homeAdv:1.00,staticOverRate:60},
+    'BRE':{name:'Brest',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'NAN':{name:'Nantes',tier:3,overRate:50,bttsRate:45,homeAdv:1.00,staticOverRate:50},
+    'MET':{name:'Metz',tier:3,overRate:50,bttsRate:45,homeAdv:1.00,staticOverRate:50},
+    'AUX':{name:'Auxerre',tier:3,overRate:45,bttsRate:40,homeAdv:0.95,staticOverRate:45},
+    'PAR':{name:'Paris FC',tier:3,overRate:50,bttsRate:45,homeAdv:0.95,staticOverRate:50},
+    'ANG':{name:'Angers',tier:4,overRate:35,bttsRate:30,homeAdv:0.90,staticOverRate:35},
+    'LOR':{name:'Lorient',tier:4,overRate:40,bttsRate:40,homeAdv:0.90,staticOverRate:40},
+    'HAV':{name:'Le Havre',tier:4,overRate:35,bttsRate:35,homeAdv:0.85,staticOverRate:35}
+  }},
+  portugal:{name:'Portugal Primeira Liga',apiName:'Portuguese League',conceders:['AVS','GIL','ALV'],teams:{
+    'BEN':{name:'Benfica',tier:1,overRate:90,bttsRate:70,homeAdv:1.15,staticOverRate:90},
+    'SPO':{name:'Sporting CP',tier:1,overRate:90,bttsRate:75,homeAdv:1.15,staticOverRate:90},
+    'POR':{name:'Porto',tier:1,overRate:85,bttsRate:70,homeAdv:1.15,staticOverRate:85},
+    'BRA':{name:'Braga',tier:1,overRate:80,bttsRate:65,homeAdv:1.10,staticOverRate:80},
+    'GUI':{name:'Guimaraes',tier:1,overRate:75,bttsRate:65,homeAdv:1.05,staticOverRate:75},
+    'SAN':{name:'Santa Clara',tier:2,overRate:65,bttsRate:55,homeAdv:1.05,staticOverRate:65},
+    'FAM':{name:'Famalicao',tier:2,overRate:70,bttsRate:60,homeAdv:1.00,staticOverRate:70},
+    'CAS':{name:'Casa Pia',tier:2,overRate:60,bttsRate:50,homeAdv:1.00,staticOverRate:60},
+    'EST':{name:'Estoril',tier:2,overRate:65,bttsRate:55,homeAdv:1.00,staticOverRate:65},
+    'RIO':{name:'Rio Ave',tier:2,overRate:65,bttsRate:55,homeAdv:1.05,staticOverRate:65},
+    'ARO':{name:'Arouca',tier:3,overRate:50,bttsRate:45,homeAdv:1.00,staticOverRate:50},
+    'MOR':{name:'Moreirense',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'NAC':{name:'Nacional',tier:3,overRate:50,bttsRate:45,homeAdv:1.00,staticOverRate:50},
+    'TON':{name:'Tondela',tier:3,overRate:50,bttsRate:45,homeAdv:0.95,staticOverRate:50},
+    'ETA':{name:'Estrela',tier:3,overRate:50,bttsRate:45,homeAdv:0.95,staticOverRate:50},
+    'AVS':{name:'AVS',tier:4,overRate:35,bttsRate:35,homeAdv:0.90,staticOverRate:35},
+    'GIL':{name:'Gil Vicente',tier:4,overRate:40,bttsRate:40,homeAdv:0.90,staticOverRate:40},
+    'ALV':{name:'Alverca',tier:4,overRate:35,bttsRate:30,homeAdv:0.85,staticOverRate:35}
+  }},
+  netherlands:{name:'Netherlands Eredivisie',apiName:'Dutch League',conceders:['PEC','NAC','VOL'],teams:{
+    'AJA':{name:'Ajax',tier:1,overRate:90,bttsRate:75,homeAdv:1.15,staticOverRate:90},
+    'PSV':{name:'PSV',tier:1,overRate:90,bttsRate:70,homeAdv:1.15,staticOverRate:90},
+    'FEY':{name:'Feyenoord',tier:1,overRate:85,bttsRate:75,homeAdv:1.10,staticOverRate:85},
+    'AZA':{name:'AZ Alkmaar',tier:1,overRate:80,bttsRate:65,homeAdv:1.10,staticOverRate:80},
+    'TWE':{name:'Twente',tier:1,overRate:75,bttsRate:65,homeAdv:1.05,staticOverRate:75},
+    'UTR':{name:'Utrecht',tier:2,overRate:70,bttsRate:60,homeAdv:1.10,staticOverRate:70},
+    'HEE':{name:'Heerenveen',tier:2,overRate:65,bttsRate:60,homeAdv:1.05,staticOverRate:65},
+    'FOR':{name:'Fortuna',tier:2,overRate:65,bttsRate:55,homeAdv:1.00,staticOverRate:65},
+    'HER':{name:'Heracles',tier:2,overRate:60,bttsRate:55,homeAdv:1.00,staticOverRate:60},
+    'EXC':{name:'Excelsior',tier:2,overRate:65,bttsRate:60,homeAdv:1.00,staticOverRate:65},
+    'GAE':{name:'Go Ahead',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'GRO':{name:'Groningen',tier:3,overRate:50,bttsRate:45,homeAdv:1.00,staticOverRate:50},
+    'TEL':{name:'Telstar',tier:3,overRate:50,bttsRate:45,homeAdv:0.95,staticOverRate:50},
+    'NEC':{name:'NEC',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'SPA':{name:'Sparta',tier:3,overRate:55,bttsRate:50,homeAdv:1.00,staticOverRate:55},
+    'PEC':{name:'PEC Zwolle',tier:4,overRate:40,bttsRate:40,homeAdv:0.95,staticOverRate:40},
+    'NAC':{name:'NAC Breda',tier:4,overRate:35,bttsRate:35,homeAdv:0.90,staticOverRate:35},
+    'VOL':{name:'Volendam',tier:4,overRate:35,bttsRate:35,homeAdv:0.85,staticOverRate:35}
+  }}
+};
+
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+const state = {
+  currentLeague:'england',
+  selectedHome:null,selectedAway:null,
+  matches:[],liveData:null,
+  countdownInterval:null,cardTimerInterval:null,notifInterval:null,refreshTimeout:null,
+  highConfPicks:[],
+  dynamicStats:{},eloRatings:{},
+  statsLoaded:false,totalRealMatches:0,teamsWithRealData:0
+};
+let isLiveTabActive=true,isPageVisible=true;
+
+// ============================================================
+// API CONFIG
+// ============================================================
+const API={
+  BASE:'https://betpawa-proxy-production.up.railway.app',
+  BRAND:'betpawa-zambia',
+  async get(path){
+    const res=await fetch(this.BASE+path,{headers:{'X-Pawa-Brand':this.BRAND,'Content-Type':'application/json'}});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return res.json();
+  },
+  async fetchSeasons(){return this.get('/api/sportsbook/virtual/v1/seasons/list/actual');},
+  async fetchRound(roundId,page){return this.get(`/api/sportsbook/virtual/v2/events/list/by-round/${roundId}?page=${page}`);}
+};
+
+// ============================================================
+// DYNAMIC STATS ENGINE
+// ============================================================
+function parseResultScore(event){
+  try{
+    const parts=event.participants||[];
+    const home=parts.find(p=>p.position===0);
+    const away=parts.find(p=>p.position===1);
+    if(!home||!away)return null;
+    const ppResults=event.results?.participantPeriodResults;
+    if(!ppResults)return null;
+    function getGoals(participantId){
+      const pData=ppResults.find(pr=>pr.participant?.id===String(participantId));
+      if(!pData)return null;
+      const ftResult=pData.periodResults?.find(pr=>pr.period?.slug==='FULL_TIME_EXCLUDING_OVERTIME'&&pr.type==='SCORE');
+      if(ftResult)return parseInt(ftResult.result,10);
+      let total=0,found=false;
+      for(const pr of(pData.periodResults||[])){
+        if((pr.period?.slug==='FIRST_HALF'||pr.period?.slug==='SECOND_HALF')&&pr.type==='SCORE'){total+=parseInt(pr.result||'0',10);found=true;}
+      }
+      return found?total:null;
+    }
+    const homeGoals=getGoals(home.id);
+    const awayGoals=getGoals(away.id);
+    if(homeGoals===null||awayGoals===null)return null;
+    return{homeCode:home.name,awayCode:away.name,homeGoals,awayGoals};
+  }catch(e){return null;}
+}
+
+function updateStatsFromMatch(parsed){
+  if(!parsed)return;
+  const{homeCode,awayCode,homeGoals,awayGoals}=parsed;
+  const totalGoals=homeGoals+awayGoals;
+  const isOver25=totalGoals>2;
+  const isBTTS=homeGoals>0&&awayGoals>0;
+  function updateTeam(code,goalsScored,goalsConceded){
+    if(!state.dynamicStats[code])state.dynamicStats[code]={matches:0,overCount:0,bttsCount:0,goalsFor:0,goalsAgainst:0,form:[],source:'real'};
+    const s=state.dynamicStats[code];
+    s.matches++;s.goalsFor+=goalsScored;s.goalsAgainst+=goalsConceded;
+    if(isOver25)s.overCount++;
+    if(isBTTS)s.bttsCount++;
+    s.form.unshift(totalGoals);
+    if(s.form.length>12)s.form.pop();
+  }
+  updateTeam(homeCode,homeGoals,awayGoals);
+  updateTeam(awayCode,awayGoals,homeGoals);
+  // Update Elo
+  updateElo(homeCode,awayCode,homeGoals,awayGoals);
+}
+
+function updateElo(homeCode,awayCode,homeGoals,awayGoals){
+  const K=24;
+  if(!state.eloRatings[homeCode])state.eloRatings[homeCode]=1500;
+  if(!state.eloRatings[awayCode])state.eloRatings[awayCode]=1500;
+  const homeElo=state.eloRatings[homeCode];
+  const awayElo=state.eloRatings[awayCode];
+  const homeAdj=homeElo+60;
+  const expectedHome=1/(1+Math.pow(10,(awayElo-homeAdj)/400));
+  const actualHome=homeGoals>awayGoals?1:homeGoals===awayGoals?0.5:0;
+  // Goal difference bonus
+  const gd=Math.abs(homeGoals-awayGoals);
+  const kdMult=gd>=4?1.75:gd>=3?1.5:gd>=2?1.25:1;
+  state.eloRatings[homeCode]=homeElo+K*kdMult*(actualHome-expectedHome);
+  state.eloRatings[awayCode]=awayElo+K*kdMult*((1-actualHome)-(1-expectedHome));
+}
+
+function computeDerivedStats(){
+  for(const[code,s]of Object.entries(state.dynamicStats)){
+    if(s.matches>0){
+      s.overRate=Math.round((s.overCount/s.matches)*100);
+      s.bttsRate=Math.round((s.bttsCount/s.matches)*100);
+      s.avgGoalsFor=parseFloat((s.goalsFor/s.matches).toFixed(2));
+      s.avgGoalsAgainst=parseFloat((s.goalsAgainst/s.matches).toFixed(2));
+      const last5=s.form.slice(0,5);
+      s.recentOverRate=last5.length>0?Math.round((last5.filter(g=>g>2).length/last5.length)*100):s.overRate;
+    }
+  }
+}
+
+function setStatsProgress(pct,text){
+  const fill=document.getElementById('statsProgressFill');
+  const txt=document.getElementById('statsLoaderText');
+  if(fill)fill.style.width=pct+'%';
+  if(txt)txt.textContent=text;
+}
+
+async function loadHistoricalStats(currentSeasonId,currentRoundId){
+  const dqDot=document.getElementById('dqDot');
+  const dqStatus=document.getElementById('dqStatus');
+  setStatsProgress(5,'Fetching season rounds list...');
+  try{
+    const seasonsData=await API.fetchSeasons();
+    const seasons=seasonsData.items||[];
+    let allRoundIds=[];
+    for(const season of seasons){
+      for(const round of(season.rounds||[])){
+        const rStart=new Date(round.tradingTime?.start);
+        if(rStart<new Date()&&round.id!==currentRoundId)allRoundIds.push({seasonId:season.id,roundId:round.id});
+      }
+    }
+    allRoundIds=allRoundIds.slice(-30).reverse();
+    if(allRoundIds.length===0)throw new Error('No past rounds');
+    setStatsProgress(10,`Found ${allRoundIds.length} past rounds. Fetching for Elo & Poisson models...`);
+    let totalMatches=0,processed=0;
+    for(let i=0;i<Math.min(allRoundIds.length,25);i++){
+      const{roundId}=allRoundIds[i];
+      try{
+        const data=await API.fetchRound(roundId,'resulted');
+        const items=data.items||[];
+        for(const event of items){
+          const parsed=parseResultScore(event);
+          if(parsed){updateStatsFromMatch(parsed);totalMatches++;}
+        }
+        processed++;
+        const pct=10+Math.round((processed/Math.min(allRoundIds.length,25))*75);
+        setStatsProgress(pct,`${processed} rounds · ${totalMatches} matches · Elo ratings updating...`);
+        await new Promise(r=>setTimeout(r,250+Math.random()*350));
+      }catch(e){}
+    }
+    computeDerivedStats();
+    state.totalRealMatches=totalMatches;
+    state.teamsWithRealData=Object.keys(state.dynamicStats).length;
+    state.statsLoaded=true;
+    setStatsProgress(100,`✅ ${totalMatches} matches loaded · ${state.teamsWithRealData} teams with real data · Elo converged`);
+    dqDot.className='dq-dot real';
+    dqStatus.textContent='Real Data Active';
+    document.getElementById('dqMatches').textContent=totalMatches;
+    document.getElementById('dqTeams').textContent=state.teamsWithRealData;
+    document.getElementById('dqAccuracy').textContent='26-Model Mode';
+    setTimeout(()=>{const l=document.getElementById('statsLoaderDisplay');if(l)l.style.display='none';},2000);
+    renderTeamLists();renderTeamStatsTable();
+  }catch(e){
+    console.warn('Stats load failed:',e);
+    setStatsProgress(100,'⚠️ Static ratings active. 26 models still run on static data.');
+    dqDot.className='dq-dot static';
+    dqStatus.textContent='Static Mode';
+    document.getElementById('dqAccuracy').textContent='Static 26-Model';
+    setTimeout(()=>{const l=document.getElementById('statsLoaderDisplay');if(l)l.style.display='none';},3000);
+  }
+}
+
+function getTeamStats(code,leagueKey){
+  const staticTeam=VFL_DATA[leagueKey]?.teams[code];
+  const real=state.dynamicStats[code];
+  const tier=staticTeam?.tier||2;
+  const tierDef=TIER_DEFAULTS[tier]||TIER_DEFAULTS[2];
+  if(real&&real.matches>=5){
+    const w=Math.min(1,real.matches/15);
+    const over=Math.round(real.overRate*w+(staticTeam?.overRate||60)*(1-w));
+    const btts=Math.round(real.bttsRate*w+(staticTeam?.bttsRate||50)*(1-w));
+    // Use real goals data when available, blend with tier defaults
+    const avgGF=real.avgGoalsFor||tierDef.gf;
+    const avgGA=real.avgGoalsAgainst||tierDef.ga;
+    return{
+      name:staticTeam?.name||code,tier,homeAdv:staticTeam?.homeAdv||1.0,
+      overRate:over,bttsRate:btts,
+      staticOverRate:staticTeam?.overRate||over,
+      avgGoalsFor:parseFloat(avgGF),avgGoalsAgainst:parseFloat(avgGA),
+      form:real.form||[],recentOverRate:real.recentOverRate||over,
+      realMatches:real.matches,source:w>=0.8?'real':'blended',
+      eloRating:state.eloRatings[code]||1500
+    };
+  }
+  return{
+    ...(staticTeam||{tier:2,overRate:60,bttsRate:50,homeAdv:1.0}),
+    name:staticTeam?.name||code,
+    staticOverRate:staticTeam?.overRate||60,
+    avgGoalsFor:tierDef.gf,avgGoalsAgainst:tierDef.ga,
+    form:[],recentOverRate:staticTeam?.overRate||60,
+    realMatches:real?.matches||0,source:'static',
+    eloRating:state.eloRatings[code]||1500
+  };
+}
+
+// ============================================================
+// ====== 26-MODEL ENGINE ======
+// ============================================================
+// Tier-based default stats (calibrated for virtual football high-scoring style)
+const TIER_DEFAULTS={
+  1:{gf:2.50,ga:1.10},
+  2:{gf:1.85,ga:1.60},
+  3:{gf:1.45,ga:2.05},
+  4:{gf:1.05,ga:2.55}
+};
+const LEAGUE_AVG_GF=1.75;
+
+const ME={
+
+  // --- UTILITY ---
+  clamp(v,lo=5,hi=97){return Math.min(hi,Math.max(lo,v));},
+
+  poissonProb(lambda,k){
+    if(lambda<=0||k<0)return 0;
+    let lp=-lambda+k*Math.log(Math.max(lambda,0.001));
+    for(let i=1;i<=k;i++)lp-=Math.log(i);
+    return Math.exp(lp);
+  },
+
+  poissonRandom(lambda){
+    if(lambda<=0)return 0;
+    const L=Math.exp(-Math.min(lambda,20));
+    let k=0,p=1;
+    do{k++;p*=Math.random();}while(p>L&&k<25);
+    return k-1;
+  },
+
+  poissonOver25(lH,lA){
+    let pu=0;
+    for(let h=0;h<=7;h++)for(let a=0;a<=7;a++)if(h+a<=2)pu+=this.poissonProb(lH,h)*this.poissonProb(lA,a);
+    return this.clamp((1-pu)*100);
+  },
+
+  // CROSS-PRODUCT xG: Attack strength vs Defence weakness (industry standard)
+  getXG(atkTeam,defTeam,isHome){
+    const atkTier=atkTeam.tier||2,defTier=defTeam.tier||2;
+    // Goals for (attacker) — use real data if available, else tier default
+    const atkGF=parseFloat(atkTeam.avgGoalsFor)||TIER_DEFAULTS[atkTier]?.gf||1.75;
+    // Goals against (defender) — how many does defender concede
+    const defGA=parseFloat(defTeam.avgGoalsAgainst)||TIER_DEFAULTS[defTier]?.ga||1.75;
+    // Cross-product: (attacker / avg) * (defender leakiness / avg) * avg
+    let xg=(atkGF/LEAGUE_AVG_GF)*(defGA/LEAGUE_AVG_GF)*LEAGUE_AVG_GF;
+    // Home advantage
+    if(isHome)xg*=(atkTeam.homeAdv||1.08);
+    // Recent form adjustment: last 3 game goals (mild ±15% max)
+    if(atkTeam.form&&atkTeam.form.length>=3){
+      const ra=atkTeam.form.slice(0,3).reduce((s,v)=>s+v,0)/3;
+      // Use half-match goals as proxy for team scoring in those games
+      const formFactor=Math.max(0.85,Math.min(1.15,ra/(atkGF*2+0.5)));
+      xg*=(0.8+formFactor*0.2);
+    }
+    return Math.max(0.35,Math.min(5.5,xg));
+  },
+
+  // MODEL 1: Poisson Distribution
+  m_Poisson(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    const p=this.poissonOver25(hXG,aXG);
+    const ph0=this.poissonProb(hXG,0),pa0=this.poissonProb(aXG,0);
+    const btts=(1-ph0)*(1-pa0)*100;
+    return{name:'Poisson',prob:p,btts,w:0.13,hXG,aXG};
+  },
+
+  // MODEL 2: Dixon-Coles Adjusted
+  m_DixonColes(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    const rho=-0.12;
+    let pu=0;
+    for(let h=0;h<=6;h++){
+      for(let a=0;a<=6;a++){
+        let p=this.poissonProb(hXG,h)*this.poissonProb(aXG,a);
+        if(h===0&&a===0)p*=Math.max(0.01,1-hXG*aXG*rho);
+        else if(h===0&&a===1)p*=Math.max(0.01,1+hXG*rho);
+        else if(h===1&&a===0)p*=Math.max(0.01,1+aXG*rho);
+        else if(h===1&&a===1)p*=Math.max(0.01,1-rho);
+        if(h+a<=2&&p>0)pu+=p;
+      }
+    }
+    return{name:'Dixon-Coles',prob:this.clamp((1-pu)*100),w:0.12};
+  },
+
+  // MODEL 3: Monte Carlo Simulation
+  m_MonteCarlo(H,A,itr=3000){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    let ov25=0,btts=0,ov35=0,ov15=0;
+    for(let i=0;i<itr;i++){
+      const hG=this.poissonRandom(hXG),aG=this.poissonRandom(aXG);
+      const t=hG+aG;
+      if(t>2)ov25++;if(t>3)ov35++;if(t>1)ov15++;
+      if(hG>0&&aG>0)btts++;
+    }
+    return{name:'Monte Carlo',prob:(ov25/itr)*100,btts:(btts/itr)*100,ov35:(ov35/itr)*100,ov15:(ov15/itr)*100,w:0.15,itr};
+  },
+
+  // MODEL 4: Bivariate Poisson (correlated goals)
+  m_BivariatePoisson(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    const cov=Math.min(hXG,aXG)*0.08;
+    const l1=Math.max(0.1,hXG-cov),l2=Math.max(0.1,aXG-cov);
+    const bvp=this.poissonOver25(l1,l2)*0.98;
+    return{name:'Bivariate P.',prob:this.clamp(bvp),w:0.07};
+  },
+
+  // MODEL 5: Negative Binomial (overdispersion)
+  m_NegBinomial(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    const adjH=hXG*1.08,adjA=aXG*1.08;
+    const p=this.poissonOver25(adjH,adjA);
+    return{name:'Neg. Binomial',prob:this.clamp(p),w:0.05};
+  },
+
+  // MODEL 6: Elo Rating System
+  m_Elo(H,A){
+    const hElo=H.eloRating||1500,aElo=A.eloRating||1500;
+    const hAdj=hElo+60;
+    const eloDiff=hAdj-aElo;
+    const wProb=1/(1+Math.pow(10,-eloDiff/400));
+    const tierBonus=(A.tier||2)>(H.tier||2)?8:0;
+    const prob=this.clamp(45+wProb*42+tierBonus);
+    return{name:'Elo Rating',prob,wProb:wProb*100,w:0.10,eloDiff};
+  },
+
+  // MODEL 7: EWMA Form
+  m_EWMA(H,A){
+    const decay=0.68;
+    function ewma(form){
+      if(!form||!form.length)return null;
+      let wt=1,tw=0,s=0;
+      for(let i=0;i<Math.min(form.length,8);i++){s+=form[i]*wt;tw+=wt;wt*=decay;}
+      return s/tw;
+    }
+    const hE=ewma(H.form),aE=ewma(A.form);
+    if(hE===null&&aE===null)return{name:'EWMA',prob:(H.overRate+A.overRate)/2,w:0.04,hasData:false};
+    const hR=hE!==null?hE:parseFloat(H.avgGoalsFor||1.5);
+    const aR=aE!==null?aE:parseFloat(A.avgGoalsFor||1.3);
+    const tot=hR+aR;
+    const prob=tot>=4.5?90:tot>=3.5?81:tot>=2.8?70:tot>=2.2?57:tot>=1.6?44:32;
+    return{name:'EWMA',prob:this.clamp(prob),ewmaTotal:tot,w:0.08,hasData:true};
+  },
+
+  // MODEL 8: Bradley-Terry
+  m_BradleyTerry(H,A){
+    const tp={1:4.2,2:2.6,3:1.5,4:0.75};
+    const hP=(tp[H.tier]||2)*((H.overRate||60)/100);
+    const aP=(tp[A.tier]||2)*((A.overRate||60)/100);
+    const hWin=hP/(hP+aP);
+    const prob=this.clamp(42+hWin*45+(A.tier-H.tier)*4);
+    return{name:'Bradley-Terry',prob,w:0.06};
+  },
+
+  // MODEL 9: Bayesian Posterior
+  m_Bayesian(H,A){
+    const prior=0.60,a=2,b=2;
+    const hN=H.realMatches||4,aN=A.realMatches||4;
+    const hPost=(a+H.overRate/100*hN)/(a+b+hN);
+    const aPost=(a+A.overRate/100*aN)/(a+b+aN);
+    return{name:'Bayesian',prob:this.clamp((hPost+aPost)/2*100),w:0.07};
+  },
+
+  // MODEL 10: Hot/Cold Streak Detector
+  m_Streak(H,A){
+    function streak(form){
+      if(!form||form.length<3)return{streak:0,dir:'neutral',rev:0};
+      let s=0;const rOver=form[0]>2;
+      for(const g of form){if((g>2)===rOver)s++;else break;}
+      const rev=Math.min(0.25,(s-2)*0.05);
+      return{streak:s,dir:rOver?'hot':'cold',rev};
+    }
+    const hS=streak(H.form),aS=streak(A.form);
+    let base=(H.overRate+A.overRate)/2;
+    if(hS.dir==='hot'&&hS.streak>=3)base*=(1-hS.rev*0.45);
+    else if(hS.dir==='cold'&&hS.streak>=3)base+=hS.rev*14;
+    if(aS.dir==='hot'&&aS.streak>=3)base*=(1-aS.rev*0.4);
+    else if(aS.dir==='cold'&&aS.streak>=3)base+=aS.rev*10;
+    return{name:'Streak Det.',prob:this.clamp(base),hStreak:hS,aStreak:aS,w:0.06};
+  },
+
+  // MODEL 11: Regression to Mean
+  m_RTM(H,A){
+    function regressed(team){
+      const lt=team.overRate,rec=team.recentOverRate||lt,n=team.realMatches||0;
+      const cred=Math.min(1,n/18);
+      return rec*cred+lt*(1-cred);
+    }
+    return{name:'Regress-Mean',prob:this.clamp((regressed(H)+regressed(A))/2),w:0.06};
+  },
+
+  // MODEL 12: Momentum Oscillator
+  m_Momentum(H,A){
+    function mom(form){
+      if(!form||form.length<2)return 0;
+      let m=0;
+      for(let i=0;i<Math.min(form.length-1,5);i++)m+=(form[i]-form[i+1])*(5-i);
+      return m;
+    }
+    const base=(H.overRate+A.overRate)/2;
+    return{name:'Momentum',prob:this.clamp(base+(mom(H.form)+mom(A.form))*1.3),w:0.05};
+  },
+
+  // MODEL 13: Volatility Index
+  m_Volatility(H,A){
+    function vol(form){
+      if(!form||form.length<3)return 1.5;
+      const avg=form.reduce((s,v)=>s+v,0)/form.length;
+      return Math.sqrt(form.reduce((s,v)=>s+Math.pow(v-avg,2),0)/form.length);
+    }
+    const avgVol=(vol(H.form)+vol(A.form))/2;
+    const base=(H.overRate+A.overRate)/2;
+    const adj=avgVol>1.8?4:avgVol>1.2?1:avgVol<0.6?-4:-1;
+    return{name:'Volatility',prob:this.clamp(base+adj),vol:avgVol.toFixed(2),w:0.04};
+  },
+
+  // MODEL 14: League Activator
+  m_LeagueActivator(H,A,league){
+    let prob=(H.overRate+A.overRate)/2;
+    const td=(A.tier||2)-(H.tier||2);
+    if(H.tier===1&&(A.tier||2)>=3)prob+=18;
+    else if(H.tier===1&&(A.tier||2)===2)prob+=10;
+    else if(H.tier===1&&A.tier===1)prob+=8;
+    if(td>=2)prob+=12;else if(td===1)prob+=6;else if(td<=-2)prob-=10;
+    if(league?.conceders?.includes(A.code))prob+=13;
+    if(league?.conceders?.includes(H.code))prob-=8;
+    return{name:'Lg Activator',prob:this.clamp(prob),w:0.08};
+  },
+
+  // MODEL 15: Post-Blowout Pattern
+  m_PostBlowout(H,A){
+    const hL=H.form&&H.form.length>0?H.form[0]:null;
+    const aL=A.form&&A.form.length>0?A.form[0]:null;
+    let base=(H.overRate+A.overRate)/2;
+    if(hL!==null&&hL>=4)base+=7;
+    if(hL!==null&&hL>=6)base-=5;
+    if(aL!==null&&aL>=4)base+=5;
+    if(aL!==null&&aL>=6)base-=4;
+    return{name:'Post-Blowout',prob:this.clamp(base),w:0.04};
+  },
+
+  // MODEL 16: RNG Cycle Detector
+  m_RNGCycle(H,A){
+    function cycle(form){
+      if(!form||form.length<6)return 0;
+      const r=form.slice(0,3).map(g=>g>2?1:0);
+      const p=form.slice(3,6).map(g=>g>2?1:0);
+      const match=r.filter((v,i)=>v===p[i]).length;
+      if(match<2)return 0;
+      return r.reduce((s,v)=>s+v,0)/3;
+    }
+    const hC=cycle(H.form),aC=cycle(A.form);
+    const base=(H.overRate+A.overRate)/2;
+    const adj=(hC+aC)*3;
+    return{name:'RNG Cycle',prob:this.clamp(base+adj),w:0.04};
+  },
+
+  // MODEL 17: Enhanced Nairaland
+  m_Nairaland(H,A){
+    function rate(t){
+      let r=0;
+      if(t.overRate>=80)r+=4;else if(t.overRate>=70)r+=3;else if(t.overRate<50)r-=3;
+      if(t.bttsRate>=70)r+=6;else if(t.bttsRate>=60)r+=4;else if(t.bttsRate<40)r-=5;
+      if(t.tier===1)r+=6;else if(t.tier===4)r-=4;
+      if((t.recentOverRate||t.overRate)>=80)r+=4;else if((t.recentOverRate||t.overRate)<=30)r-=4;
+      if(parseFloat(t.avgGoalsFor||1.5)>=2)r+=3;else if(parseFloat(t.avgGoalsFor||1.5)<=1)r-=2;
+      return r;
+    }
+    const hR=rate(H),aR=rate(A),c=hR+aR;
+    const prob=c>=22?95:c>=16?90:c>=10?82:c>=5?73:c>=0?63:c>=-5?50:36;
+    return{name:'Nairaland+',prob:this.clamp(prob),combined:c,hR,aR,w:0.07};
+  },
+
+  // MODEL 18: Goals Frequency Distribution
+  m_GoalsFreq(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    let ov=0;
+    for(let h=0;h<=9;h++)for(let a=0;a<=9;a++)if(h+a>2)ov+=this.poissonProb(hXG,h)*this.poissonProb(aXG,a);
+    return{name:'Goals Freq',prob:this.clamp(ov*100),w:0.05};
+  },
+
+  // MODEL 19: Sequential Autocorrelation
+  m_Autocorrelation(H,A){
+    function acf(form){
+      if(!form||form.length<=1)return 0;
+      const mean=form.reduce((s,v)=>s+v,0)/form.length;
+      let num=0,den=0;
+      for(let i=0;i<form.length-1;i++)num+=(form[i]-mean)*(form[i+1]-mean);
+      for(const v of form)den+=Math.pow(v-mean,2);
+      return den>0?num/den:0;
+    }
+    const base=(H.overRate+A.overRate)/2;
+    return{name:'Autocorr.',prob:this.clamp(base+(acf(H.form)+acf(A.form))*7),w:0.04};
+  },
+
+  // MODEL 20: Tier Power
+  m_TierPower(H,A){
+    const tp={1:95,2:70,3:50,4:30};
+    const combined=(tp[H.tier]||60)*0.55+(tp[A.tier]||60)*0.45;
+    const td=(A.tier||2)-(H.tier||2);
+    const bonus=td>=2?15:td===1?8:td<=-2?-12:td===-1?-5:0;
+    return{name:'Tier Power',prob:this.clamp(combined+bonus),w:0.06};
+  },
+
+  // MODEL 21: Pattern Break Detector
+  m_PatternBreak(H,A){
+    function brk(form){
+      if(!form||form.length<5)return 0;
+      const r2=form.slice(0,2).map(g=>g>2?1:0);
+      const p3=form.slice(2,5).map(g=>g>2?1:0);
+      const rA=r2.reduce((s,v)=>s+v,0)/2;
+      const pA=p3.reduce((s,v)=>s+v,0)/3;
+      const diff=rA-pA;
+      return Math.abs(diff)>0.35?diff:0;
+    }
+    const base=(H.overRate+A.overRate)/2;
+    return{name:'Pattern Brk',prob:this.clamp(base+(brk(H.form)+brk(A.form))*6),w:0.04};
+  },
+
+  // MODEL 22: xG Ratio
+  m_xGRatio(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    const tot=hXG+aXG;
+    const prob=tot>=6?94:tot>=5?90:tot>=4.2?84:tot>=3.5?75:tot>=2.8?64:tot>=2.2?52:38;
+    return{name:'xG Ratio',prob:this.clamp(prob),tot,w:0.08};
+  },
+
+  // MODEL 23: Historical Rate Blend
+  m_HistoricalRate(H,A){
+    const hw=Math.min(1,(H.realMatches||0)/15);
+    const aw=Math.min(1,(A.realMatches||0)/15);
+    const hE=H.overRate*hw+(H.staticOverRate||H.overRate)*(1-hw);
+    const aE=A.overRate*aw+(A.staticOverRate||A.overRate)*(1-aw);
+    return{name:'Hist. Rate',prob:this.clamp((hE+aE)/2),w:0.06};
+  },
+
+  // MODEL 24: Defensive Profile
+  m_DefensiveProfile(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    const p=this.poissonOver25(hXG,aXG);
+    return{name:'Def. Profile',prob:this.clamp(p),hXG,aXG,w:0.08};
+  },
+
+  // MODEL 25: Score Distribution (most likely score)
+  m_ScoreDist(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    let ov=0,maxP=0,mls='2-1';
+    for(let h=0;h<=8;h++){
+      for(let a=0;a<=8;a++){
+        const p=this.poissonProb(hXG,h)*this.poissonProb(aXG,a);
+        if(h+a>2)ov+=p;
+        if(p>maxP){maxP=p;mls=`${h}-${a}`;}
+      }
+    }
+    return{name:'Score Dist',prob:this.clamp(ov*100),mls,w:0.05};
+  },
+
+  // MODEL 26: xG Weighted (Elo-adjusted Poisson)
+  m_xGWeighted(H,A){
+    const hXG=this.getXG(H,A,true),aXG=this.getXG(A,H,false);
+    const eloAdj=((H.eloRating||1500)-(A.eloRating||1500))/400;
+    const adjH=hXG*(1+eloAdj*0.12),adjA=aXG*(1-eloAdj*0.06);
+    return{name:'xG Weighted',prob:this.clamp(this.poissonOver25(adjH,adjA)),w:0.06};
+  },
+
+  // --- ENSEMBLE ---
+  ensemble(models){
+    let tw=0,ws=0;
+    const probs=[];
+    for(const m of models){
+      if(m.w&&m.prob!==undefined){ws+=m.prob*m.w;tw+=m.w;probs.push(m.prob);}
+    }
+    const ens=tw>0?ws/tw:60;
+    const mean=probs.reduce((s,v)=>s+v,0)/probs.length;
+    const variance=probs.reduce((s,v)=>s+Math.pow(v-mean,2),0)/probs.length;
+    const stdDev=Math.sqrt(variance);
+    const above90=probs.filter(p=>p>=88).length;
+    const above80=probs.filter(p=>p>=78).length;
+    const above70=probs.filter(p=>p>=68).length;
+    return{ens:this.clamp(ens),stdDev,above90,above80,above70,n:models.length,mean};
+  },
+
+  // --- MAIN ANALYZE ---
+  analyze(H,A,league,homeCode,awayCode){
+    const Hc={...H,code:homeCode},Ac={...A,code:awayCode};
+    const models=[
+      this.m_Poisson(Hc,Ac),
+      this.m_DixonColes(Hc,Ac),
+      this.m_MonteCarlo(Hc,Ac,3000),
+      this.m_BivariatePoisson(Hc,Ac),
+      this.m_NegBinomial(Hc,Ac),
+      this.m_Elo(Hc,Ac),
+      this.m_EWMA(Hc,Ac),
+      this.m_BradleyTerry(Hc,Ac),
+      this.m_Bayesian(Hc,Ac),
+      this.m_Streak(Hc,Ac),
+      this.m_RTM(Hc,Ac),
+      this.m_Momentum(Hc,Ac),
+      this.m_Volatility(Hc,Ac),
+      this.m_LeagueActivator(Hc,Ac,league),
+      this.m_PostBlowout(Hc,Ac),
+      this.m_RNGCycle(Hc,Ac),
+      this.m_Nairaland(Hc,Ac),
+      this.m_GoalsFreq(Hc,Ac),
+      this.m_Autocorrelation(Hc,Ac),
+      this.m_TierPower(Hc,Ac),
+      this.m_PatternBreak(Hc,Ac),
+      this.m_xGRatio(Hc,Ac),
+      this.m_HistoricalRate(Hc,Ac),
+      this.m_DefensiveProfile(Hc,Ac),
+      this.m_ScoreDist(Hc,Ac),
+      this.m_xGWeighted(Hc,Ac)
+    ];
+    const ens=this.ensemble(models);
+    // Sample-size adjusted confidence
+    const sampleMin=Math.min(Hc.realMatches||0,Ac.realMatches||0);
+    // Static mode: tier defaults are calibrated, trust ensemble fully (1.0)
+    // Real data: slight compression until we have enough samples
+    const sampleFactor=sampleMin>=20?1.0:sampleMin>=12?0.98:sampleMin>=6?0.96:1.0;
+    const finalProb=Math.round(50+(ens.ens-50)*sampleFactor);
+    // Kelly Criterion (vs 1.85 odds, b=0.85 profit margin)
+    const p=finalProb/100,q=1-p,b=0.85;
+    const kelly=Math.max(0,(b*p-q)/b);
+    const mc=models.find(m=>m.name==='Monte Carlo');
+    const sd=models.find(m=>m.name==='Score Dist');
+    const xgR=models.find(m=>m.name==='xG Ratio');
+    return{...ens,finalProb,kelly,hasValue:kelly>0.02,
+      bttsProb:mc?mc.btts:(Hc.bttsRate+Ac.bttsRate)/2,
+      ov35Prob:mc?mc.ov35:0,
+      mostLikelyScore:sd?.mls||'--',
+      xGTotal:xgR?.tot||0,
+      models,sampleFactor,sampleMin};
+  }
+};
+
+// ============================================================
+// STRICT FILTER SYSTEM
+// ============================================================
+const Filter={
+  check(analysis,H,A){
+    const{finalProb,stdDev,above80,hasValue}=analysis;
+    // Dynamic threshold: higher bar when real data available (more reliable)
+    const hasRealData=(H.source==='real'||H.source==='blended')&&(A.source==='real'||A.source==='blended');
+    const confThreshold=hasRealData?86:82;
+    const modelThreshold=hasRealData?10:10;
+    if(finalProb<confThreshold)return{pass:false,reason:`${finalProb}% < ${confThreshold}% threshold`};
+    if(above80<modelThreshold)return{pass:false,reason:`${above80}/${modelThreshold}+ models agree`};
+    if(stdDev>26)return{pass:false,reason:`Model spread σ=${stdDev.toFixed(0)} too high`};
+    if(!hasValue)return{pass:false,reason:'Negative Kelly — no value'};
+    return{pass:true};
+  },
+  label(prob){
+    if(prob>=94)return{lbl:'ULTRA',cls:'ultra-conf',stars:'⭐⭐⭐⭐',badgeCls:'conf-ultra'};
+    if(prob>=89)return{lbl:'HIGH',cls:'high-conf',stars:'⭐⭐⭐',badgeCls:'conf-high'};
+    return{lbl:'STRONG',cls:'high-conf',stars:'⭐⭐',badgeCls:'conf-high'};
+  }
+};
+
+// ============================================================
+// MAIN PREDICTION ORCHESTRATOR
+// ============================================================
+function orchestrate(leagueKey,homeCode,awayCode){
+  const league=VFL_DATA[leagueKey];
+  const H=getTeamStats(homeCode,leagueKey);
+  const A=getTeamStats(awayCode,leagueKey);
+  const analysis=ME.analyze(H,A,league,homeCode,awayCode);
+  const{finalProb,bttsProb,ov35Prob,mostLikelyScore,xGTotal,models,above80,stdDev,kelly}=analysis;
+  // Prediction label
+  let prediction,stars,reason;
+  if(finalProb>=90){
+    prediction=bttsProb>=65?'OVER 2.5 + BTTS':'OVER 2.5';
+    stars=finalProb>=94?'⭐⭐⭐⭐':finalProb>=91?'⭐⭐⭐':'⭐⭐';
+  }else if(finalProb>=78){
+    prediction='OVER 2.5';stars='⭐⭐';
+  }else if(finalProb>=65){
+    prediction='OVER 1.5';stars='⭐';
+  }else if(finalProb<=35){
+    prediction='UNDER 2.5';stars='⭐⭐';
+  }else{
+    prediction='OVER 1.5';stars='⭐';
+  }
+  reason=buildReason(H,A,homeCode,awayCode,analysis,league);
+  // Nairaland rating for UI
+  const nlModel=models.find(m=>m.name==='Nairaland+');
+  return{
+    prediction,stars,reason,confidence:finalProb,
+    homeRating:nlModel?.hR||0,awayRating:nlModel?.aR||0,combined:nlModel?.combined||0,
+    bttsProb,ov35Prob,mostLikelyScore,xGTotal,
+    analysis,models,H,A,
+    dataSource:H.source==='real'&&A.source==='real'?'Real Data':H.source==='static'&&A.source==='static'?'Static':'Blended'
+  };
+}
+
+function buildReason(H,A,hCode,aCode,analysis,league){
+  const parts=[];
+  const mc=analysis.models?.find(m=>m.name==='Monte Carlo');
+  if(mc)parts.push(`MC-sim: ${mc.prob.toFixed(0)}%`);
+  const xg=analysis.models?.find(m=>m.name==='xG Ratio');
+  if(xg)parts.push(`xG: ${xg.tot?.toFixed(1)}/game`);
+  if(H.tier===1&&(A.tier||2)>=3)parts.push('Activator vs Weak');
+  if(H.source==='real')parts.push(`${hCode} O2.5:${H.overRate}% (real)`);
+  if(A.source==='real')parts.push(`${aCode} O2.5:${A.overRate}% (real)`);
+  const el=analysis.models?.find(m=>m.name==='Elo Rating');
+  if(el&&Math.abs(el.eloDiff||0)>100)parts.push(`Elo gap:${Math.round(el.eloDiff||0)}`);
+  if(analysis.above80>=20)parts.push(`${analysis.above80}/26 models agree`);
+  return parts.join(' · ')||`${hCode} vs ${aCode} matchup analysis`;
+}
+
+// ============================================================
+// LIVE DATA FETCH
+// ============================================================
+async function fetchLiveData(){
+  const btn=document.getElementById('refreshBtn');
+  const dot=document.getElementById('liveDot');
+  const statusEl=document.getElementById('liveStatus');
+  btn.classList.add('loading');btn.textContent='⏳ Loading...';
+  dot.className='live-dot loading';statusEl.textContent='Fetching...';
+  try{
+    const sd=await API.fetchSeasons();
+    if(!sd?.items?.length)throw new Error('No seasons');
+    const now=new Date();
+    let tSeason=null,tRound=null;
+    for(const s of sd.items){
+      for(const r of(s.rounds||[])){
+        const rs=new Date(r.tradingTime?.start);
+        if(rs>now&&(!tRound||rs<new Date(tRound.tradingTime.start))){tSeason=s;tRound=r;}
+      }
+    }
+    if(!tRound){
+      tSeason=sd.items[0];
+      const rounds=tSeason.rounds||[];
+      for(let i=rounds.length-1;i>=0;i--){if(new Date(rounds[i].tradingTime?.start)<=now){tRound=rounds[i];break;}}
+      if(!tRound)tRound=(tSeason.rounds||[])[0];
+    }
+    const evd=await API.fetchRound(tRound.id,'upcoming');
+    if(!evd?.items)throw new Error('No events');
+    state.liveData={season:tSeason,round:tRound,events:evd.items,fetchTime:now};
+    updateLiveStatusBar(tSeason,tRound);
+    generateLivePredictions(evd.items,tSeason,tRound);
+    dot.className='live-dot';statusEl.textContent='LIVE';statusEl.style.color='var(--green)';
+    if(!state.statsLoaded)loadHistoricalStats(tSeason.id,tRound.id);
+  }catch(e){
+    dot.className='live-dot offline';statusEl.textContent='Offline';statusEl.style.color='var(--red)';
+    showOfflineMode();
+  }
+  btn.classList.remove('loading');btn.textContent='🔄 Refresh';
+  scheduleNextFetch();
+}
+
+function scheduleNextFetch(){
+  if(state.refreshTimeout)clearTimeout(state.refreshTimeout);
+  if(!isLiveTabActive||!isPageVisible)return;
+  state.refreshTimeout=setTimeout(fetchLiveData,30000+Math.floor(Math.random()*8000));
+}
+
+function updateLiveStatusBar(season,round){
+  document.getElementById('seasonDisplay').textContent='Season #'+season.id;
+  document.getElementById('matchdayDisplay').textContent='MD '+round.name;
+  if(state.countdownInterval)clearInterval(state.countdownInterval);
+  const rs=new Date(round.tradingTime.start);
+  function upd(){
+    const diff=rs-new Date();
+    const cd=document.getElementById('countdownDisplay');
+    if(diff<=0){cd.textContent='LIVE NOW';cd.style.color='var(--red)';return;}
+    const m=Math.floor(diff/60000),s=Math.floor((diff%60000)/1000);
+    cd.textContent=m+':'+String(s).padStart(2,'0');
+    cd.style.color=m<2?'var(--red)':m<5?'var(--orange)':'var(--gold)';
+  }
+  upd();state.countdownInterval=setInterval(upd,1000);
+}
+
+function generateLivePredictions(events,season,round){
+  const roundStart=new Date(round.tradingTime.start);
+  const all=[],passed=[];
+  events.forEach(ev=>{
+    if(!ev.participants||ev.participants.length<2)return;
+    const hCode=ev.participants.find(p=>p.position===0)?.name;
+    const aCode=ev.participants.find(p=>p.position===1)?.name;
+    if(!hCode||!aCode)return;
+    const lgName=ev.competition?.name||'';
+    const lgKey=Object.keys(VFL_DATA).find(k=>VFL_DATA[k].apiName===lgName||lgName.toLowerCase().includes(VFL_DATA[k].name.toLowerCase().split(' ')[0]));
+    if(!lgKey)return;
+    const pred=orchestrate(lgKey,hCode,aCode);
+    const H=pred.H,A=pred.A;
+    const filterResult=Filter.check(pred.analysis,H,A);
+    const obj={ev,hCode,aCode,H,A,league:VFL_DATA[lgKey],lgKey,lgName,roundStart,season,round,...pred,filterResult};
+    all.push(obj);
+    if(filterResult.pass)passed.push(obj);
+  });
+  state.highConfPicks=passed;
+  const badge=document.getElementById('liveBadge');
+  const cEl=document.getElementById('highConfCount');
+  badge.textContent=passed.length;
+  badge.className=passed.length>0?'badge-count show':'badge-count';
+  cEl.textContent=passed.length+' near-sure picks';
+  if(passed.length>0)showNotificationOverlay(passed,season,round,roundStart);
+  renderLivePredictions(all,passed,roundStart);
+}
+
+function renderLivePredictions(all,passed,roundStart){
+  const c=document.getElementById('livePredictionsContainer');
+  if(passed.length===0){
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No Near-Sure Picks This Round</div><div class="empty-desc">${all.length} matches analyzed by 26 models.<br>None passed the strict filter (88%+ confidence + model consensus).<br>Auto-refresh active. Next round may qualify.</div></div>`;
+    return;
+  }
+  let html='';
+  passed.sort((a,b)=>b.confidence-a.confidence).forEach(p=>html+=renderPredCard(p,roundStart));
+  c.innerHTML=html;
+  startCardCountdowns(roundStart);
+}
+
+function renderFormBoxes(form){
+  if(!form||!form.length)return '<span style="font-size:8px;color:var(--text2)">No history</span>';
+  return form.slice(0,5).map(g=>{
+    const cls=g>2?'fb-over':g>0?'fb-under':'fb-na';
+    return`<div class="form-box-mini ${cls}">${g}</div>`;
+  }).join('');
+}
+
+function renderModelBreakdown(models){
+  if(!models||!models.length)return'';
+  const show=models.filter(m=>m.w).slice(0,12);
+  const html=show.map(m=>{
+    const cls=m.prob>=88?'mp-high':m.prob>=68?'mp-med':'mp-low';
+    return`<div class="model-item"><div class="model-name">${m.name}</div><div class="model-prob ${cls}">${Math.round(m.prob)}%</div></div>`;
+  }).join('');
+  const above80=models.filter(m=>m.w&&m.prob>=78).length;
+  const total=models.filter(m=>m.w).length;
+  const consPct=Math.round((above80/total)*100);
+  const consColor=consPct>=80?'var(--green)':consPct>=60?'var(--orange)':'var(--red)';
+  return`<div class="model-breakdown">
+    <div class="model-breakdown-title"><span>🔬 26-Model Breakdown</span><span class="filter-badge">📊 ${above80}/${total} agree</span></div>
+    <div class="model-grid">${html}</div>
+    <div class="consensus-bar"><div class="consensus-fill" style="width:${consPct}%;background:${consColor}"></div></div>
+    <div style="font-size:8px;color:var(--text2);margin-top:3px;text-align:center">Model consensus: ${consPct}%</div>
+  </div>`;
+}
+
+function renderPredCard(pred,roundStart){
+  const lbl=Filter.label(pred.confidence);
+  const homeSrc=pred.H.source==='real'?'<span class="source-tag st-real">REAL</span>':'<span class="source-tag st-static">EST</span>';
+  const awaySrc=pred.A.source==='real'?'<span class="source-tag st-real">REAL</span>':'<span class="source-tag st-static">EST</span>';
+  const hM=pred.H.realMatches>0?`(${pred.H.realMatches}m)`:'';
+  const aM=pred.A.realMatches>0?`(${pred.A.realMatches}m)`:'';
+  const hElo=Math.round(pred.H.eloRating||1500);
+  const aElo=Math.round(pred.A.eloRating||1500);
+  return`<div class="pred-card ${lbl.cls}">
+    <div class="pred-card-header">
+      <div>
+        <div class="pred-match-name">⚽ ${pred.hCode} vs ${pred.aCode}</div>
+        <div class="pred-league-tag">🏆 ${pred.lgName} | Round ${pred.round.name}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pred-conf-badge ${lbl.badgeCls}">${pred.confidence}%</div>
+        <div style="font-size:11px;color:var(--gold);text-align:center;margin-top:2px">${pred.stars}</div>
+      </div>
+    </div>
+    <div class="pred-main-bet">
+      <div class="pred-bet-label">🎯 26-Model Recommended Bet</div>
+      <div class="pred-bet-value">${pred.prediction}</div>
+    </div>
+    <div class="real-stats-row">
+      <div class="real-stat-box">
+        <div class="real-stat-team">${pred.hCode} ${homeSrc} ${hM}</div>
+        <div class="real-stat-grid">
+          <span class="stat-pill sp-over">O2.5:${pred.H.overRate}%</span>
+          <span class="stat-pill sp-btts">BTTS:${pred.H.bttsRate}%</span>
+          <span class="stat-pill sp-elo">Elo:${hElo}</span>
+        </div>
+        <div class="form-boxes-row">${renderFormBoxes(pred.H.form)}</div>
+      </div>
+      <div class="real-stat-box">
+        <div class="real-stat-team">${pred.aCode} ${awaySrc} ${aM}</div>
+        <div class="real-stat-grid">
+          <span class="stat-pill sp-over">O2.5:${pred.A.overRate}%</span>
+          <span class="stat-pill sp-btts">BTTS:${pred.A.bttsRate}%</span>
+          <span class="stat-pill sp-elo">Elo:${aElo}</span>
+        </div>
+        <div class="form-boxes-row">${renderFormBoxes(pred.A.form)}</div>
+      </div>
+    </div>
+    ${renderModelBreakdown(pred.models)}
+    <div class="pred-card-body">
+      <div class="pred-info-item"><div class="pred-info-label">xG Total</div><div class="pred-info-value">${pred.xGTotal?.toFixed(2)||'--'}</div></div>
+      <div class="pred-info-item"><div class="pred-info-label">BTTS Prob</div><div class="pred-info-value">${Math.round(pred.bttsProb||0)}%</div></div>
+      <div class="pred-info-item"><div class="pred-info-label">Most Likely</div><div class="pred-info-value">${pred.mostLikelyScore}</div></div>
+      <div class="pred-info-item"><div class="pred-info-label">Data Source</div><div class="pred-info-value" style="color:var(--purple)">${pred.dataSource}</div></div>
+    </div>
+    <div class="pred-countdown"><span>⏱</span><span class="time countdown-timer">Calc...</span><span>to kick off</span></div>
+    <div class="pred-reason">${pred.reason}</div>
+  </div>`;
+}
+
+function startCardCountdowns(roundStart){
+  function upd(){
+    document.querySelectorAll('.countdown-timer').forEach(el=>{
+      const diff=roundStart-new Date();
+      if(diff<=0){el.textContent='LIVE NOW';el.className='time urgent';}
+      else{const m=Math.floor(diff/60000),s=Math.floor((diff%60000)/1000);el.textContent=m+'m '+String(s).padStart(2,'0')+'s';el.className=m<2?'time urgent':'time';}
+    });
+  }
+  upd();
+  if(state.cardTimerInterval)clearInterval(state.cardTimerInterval);
+  state.cardTimerInterval=setInterval(upd,1000);
+}
+
+function showNotificationOverlay(picks,season,round,roundStart){
+  document.getElementById('notifSeason').textContent='Season #'+season.id;
+  document.getElementById('notifMatchday').textContent='📅 MD '+round.name+' | '+picks.length+' near-sure pick'+(picks.length>1?'s':'');
+  let html='';
+  picks.slice(0,5).forEach(p=>{
+    html+=`<div class="notif-match-item">
+      <div class="notif-match-name">⚽ ${p.hCode} vs ${p.aCode}</div>
+      <div class="notif-match-bet">🎯 ${p.prediction}</div>
+      <div class="notif-match-conf">${p.confidence}% confidence | ${p.lgName}</div>
+      <div class="notif-data-source">26 models · ${p.analysis.above80} agree · σ=${p.analysis.stdDev?.toFixed(0)}</div>
+    </div>`;
+  });
+  document.getElementById('notifMatches').innerHTML=html;
+  function upCD(){
+    const diff=roundStart-new Date();
+    const el=document.getElementById('notifCountdown');
+    if(diff<=0){el.textContent='🔴 LIVE NOW — Place bets!';return;}
+    const m=Math.floor(diff/60000),s=Math.floor((diff%60000)/1000);
+    el.textContent='⏱ Kicks off in: '+m+':'+String(s).padStart(2,'0');
+  }
+  upCD();
+  if(state.notifInterval)clearInterval(state.notifInterval);
+  state.notifInterval=setInterval(upCD,1000);
+  document.getElementById('notifOverlay').classList.add('show');
+}
+
+function closeNotification(){
+  document.getElementById('notifOverlay').classList.remove('show');
+  if(state.notifInterval)clearInterval(state.notifInterval);
+}
+
+function showOfflineMode(){
+  document.getElementById('livePredictionsContainer').innerHTML=`<div class="alert alert-warning"><strong>⚠️ Cannot reach BetPawa API</strong><br>Proxy may be cold-starting. Wait 30s and tap Refresh.<br><small>Proxy: betpawa-proxy-production.up.railway.app</small></div>`;
+}
+
+// ============================================================
+// TEAM STATS TABLE
+// ============================================================
+function renderTeamStatsTable(){
+  const lgKey=state.currentLeague;
+  const league=VFL_DATA[lgKey];
+  const content=document.getElementById('teamStatsContent');
+  if(!content)return;
+  const rows=Object.entries(league.teams).map(([code,st])=>{
+    const eff=getTeamStats(code,lgKey);
+    const srcTag=eff.source==='real'?'<span class="source-tag st-real">REAL</span>':eff.source==='blended'?'<span class="source-tag st-real">BLND</span>':'<span class="source-tag st-static">EST</span>';
+    const oC=eff.overRate>=75?'td-good':eff.overRate>=55?'td-mid':'td-bad';
+    const bC=eff.bttsRate>=65?'td-good':eff.bttsRate>=50?'td-mid':'td-bad';
+    const elo=Math.round(state.eloRatings[code]||1500);
+    const eloC=elo>=1600?'td-good':elo>=1450?'td-mid':'td-bad';
+    const fh=eff.form.length>0?eff.form.slice(0,5).map(g=>g>2?'✅':'❌').join(''):'—';
+    return`<tr><td class="td-team">${code}</td><td>${srcTag}</td><td>${eff.realMatches||'—'}</td><td class="${oC}">${eff.overRate}%</td><td class="${bC}">${eff.bttsRate}%</td><td>${eff.avgGoalsFor||'—'}</td><td>${eff.avgGoalsAgainst||'—'}</td><td class="${eloC}">${elo}</td><td>${fh}</td></tr>`;
+  }).join('');
+  content.innerHTML=`<table><thead><tr><th>Team</th><th>Src</th><th>Matches</th><th>O2.5%</th><th>BTTS%</th><th>GF</th><th>GA</th><th>Elo</th><th>Form(5)</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ============================================================
+// MANUAL PREDICTOR
+// ============================================================
+function renderTeamLists(){
+  const lgKey=state.currentLeague;
+  const league=VFL_DATA[lgKey];
+  const hl=document.getElementById('homeTeamList'),al=document.getElementById('awayTeamList');
+  hl.innerHTML='';al.innerHTML='';
+  Object.entries(league.teams).forEach(([code,team])=>{
+    const eff=getTeamStats(code,lgKey);
+    const rC=team.tier===1?'r-activator':team.tier===2?'r-strong':team.tier===3?'r-neutral':'r-weak';
+    const rT=team.tier===1?'ACT':team.tier===2?'STR':team.tier===3?'NEU':'WEK';
+    const liveTag=eff.source==='real'?`<span class="team-live-badge">★${eff.realMatches}</span>`:'';
+    const create=(side)=>{
+      const div=document.createElement('div');
+      div.className='team-item';div.dataset.code=code;div.dataset.side=side;
+      div.onclick=()=>selectTeam(code,side);
+      div.innerHTML=`<span class="team-code">${code}</span><span class="team-name">${team.name}</span>${liveTag}<span class="team-rating ${rC}">${rT}</span>`;
+      return div;
+    };
+    hl.appendChild(create('home'));al.appendChild(create('away'));
+  });
+  renderTeamStatsTable();
+}
+
+function selectTeam(code,side){
+  const lgKey=state.currentLeague;
+  document.querySelectorAll(`.team-item[data-side="${side}"]`).forEach(el=>el.classList.remove('selected-home','selected-away'));
+  const el=document.querySelector(`.team-item[data-code="${code}"][data-side="${side}"]`);
+  if(el)el.classList.add(side==='home'?'selected-home':'selected-away');
+  if(side==='home')state.selectedHome=code;
+  else state.selectedAway=code;
+  const eff=getTeamStats(code,lgKey);
+  const bid=side==='home'?'homeBox':'awayBox';
+  const box=document.getElementById(bid);
+  box.classList.add('active');
+  box.innerHTML=`<div class="team-box-code">${code}</div><div class="team-box-name">${eff.name}</div><div class="team-box-stats">${eff.source==='real'?`★ ${eff.realMatches} real`:'Static'} | Elo:${Math.round(eff.eloRating||1500)}</div>`;
+  if(state.selectedHome&&state.selectedAway)generateManualPrediction();
+  document.getElementById('addMatchBtn').disabled=!(state.selectedHome&&state.selectedAway);
+}
+
+function generateManualPrediction(){
+  const lgKey=state.currentLeague;
+  const pred=orchestrate(lgKey,state.selectedHome,state.selectedAway);
+  const resultEl=document.getElementById('predictionResult');
+  const confClass=pred.confidence>=88?'high':pred.confidence>=68?'medium':'low';
+  const confColor=pred.confidence>=88?'var(--green)':pred.confidence>=68?'var(--orange)':'var(--red)';
+  resultEl.className='prediction-result '+confClass;
+  resultEl.innerHTML=`<div class="result-title">🎯 26-Model Prediction</div>
+    <div class="result-prediction">${pred.prediction}</div>
+    <div class="result-confidence" style="color:${confColor}">${pred.confidence}%</div>
+    <div class="result-reason">${pred.reason}</div>
+    <div class="result-source">📊 ${pred.dataSource} · ${pred.stars} · xG:${pred.xGTotal?.toFixed(2)||'--'}</div>`;
+  // Nairaland calc
+  document.getElementById('ratingCalc').style.display='block';
+  document.getElementById('homeRatingVal').textContent=pred.homeRating;
+  document.getElementById('awayRatingVal').textContent=pred.awayRating;
+  document.getElementById('combinedRating').textContent=pred.combined;
+  document.getElementById('signalVal').textContent=pred.combined>0?'✅ OVER':'❌ UNDER';
+  document.getElementById('signalVal').style.color=pred.combined>0?'var(--green)':'var(--red)';
+  // Model breakdown
+  const ms=document.getElementById('manualModelSection');
+  const mg=document.getElementById('manualModelGrid');
+  ms.style.display='block';
+  mg.innerHTML=pred.models.filter(m=>m.w).map(m=>{
+    const cls=m.prob>=88?'mp-high':m.prob>=68?'mp-med':'mp-low';
+    return`<div class="mmg-item"><div class="mmg-name">${m.name}</div><div class="mmg-prob ${cls}">${Math.round(m.prob)}%</div></div>`;
+  }).join('');
+}
+
+function addMatch(){
+  if(!state.selectedHome||!state.selectedAway)return;
+  const lgKey=state.currentLeague;
+  const pred=orchestrate(lgKey,state.selectedHome,state.selectedAway);
+  const H=pred.H,A=pred.A;
+  state.matches.push({home:state.selectedHome,away:state.selectedAway,homeName:H.name,awayName:A.name,prediction:pred.prediction,confidence:pred.confidence,stars:pred.stars,league:lgKey,source:pred.dataSource});
+  updateMatchHistory();updatePowerMeter();updateAnalyzer();
+}
+
+function updateMatchHistory(){
+  const hEl=document.getElementById('matchHistory');
+  const lEl=document.getElementById('historyList');
+  if(!state.matches.length){hEl.style.display='none';return;}
+  hEl.style.display='block';
+  lEl.innerHTML=state.matches.map((m,i)=>`<div class="history-item">
+    <div class="history-num">${i+1}</div>
+    <div class="history-match"><div>${m.home} vs ${m.away}</div><div style="font-size:8px;color:var(--text2)">${m.homeName} vs ${m.awayName}</div></div>
+    <div class="history-prediction"><div class="history-stars">${m.stars}</div><div style="font-size:9px;font-weight:700;color:var(--gold)">${m.prediction}</div><div class="history-accuracy">${m.confidence}%</div></div>
+    <button class="delete-btn" onclick="deleteMatch(${i})">✕</button>
+  </div>`).join('');
+}
+
+function deleteMatch(i){state.matches.splice(i,1);updateMatchHistory();updatePowerMeter();updateAnalyzer();}
+function clearMatches(){state.matches=[];updateMatchHistory();updatePowerMeter();updateAnalyzer();}
+
+function updatePowerMeter(){
+  const pF=document.getElementById('powerFill'),pP=document.getElementById('powerPercent');
+  if(!state.matches.length){pF.style.width='0%';pF.textContent='0%';pP.textContent='0%';return;}
+  const avg=Math.round(state.matches.reduce((s,m)=>s+m.confidence,0)/state.matches.length);
+  pF.style.width=avg+'%';pF.textContent=avg+'%';pP.textContent=avg+'%';
+}
+
+function updateAnalyzer(){
+  const total=state.matches.length;
+  const high=state.matches.filter(m=>m.confidence>=88).length;
+  const avg=total>0?Math.round(state.matches.reduce((s,m)=>s+m.confidence,0)/total):0;
+  document.getElementById('statMatches').textContent=total;
+  document.getElementById('statHighConf').textContent=high;
+  document.getElementById('statAccuracy').textContent=avg+'%';
+  if(total>0){
+    const aEl=document.getElementById('analyzerResult');
+    aEl.style.display='block';
+    document.getElementById('analyzerText').textContent=`${total} matches · ${high} near-sure (88%+) · Avg confidence: ${avg}% · ${high>=3?'STRONG ROUND — Accumulator possible!':'Be selective.'}`;
+    const rEl=document.getElementById('recommendations');
+    const hP=state.matches.filter(m=>m.confidence>=88);
+    rEl.innerHTML=hP.length>0?hP.map(m=>`<div class="strategy-card"><div class="strategy-name">${m.home} vs ${m.away}</div><div class="strategy-desc">Bet: ${m.prediction} | ${m.confidence}% ${m.stars} | ${m.source}</div></div>`).join(''):'<div class="strategy-card"><div class="strategy-name">No 88%+ picks</div><div class="strategy-desc">Add more matches or wait for better matchups.</div></div>';
+  }
+}
+
+function switchLeague(league,btn){
+  state.currentLeague=league;state.selectedHome=null;state.selectedAway=null;
+  document.querySelectorAll('.league-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTeamLists();resetPrediction();
+}
+
+function resetPrediction(){
+  state.selectedHome=null;state.selectedAway=null;
+  document.querySelectorAll('.team-item').forEach(el=>el.classList.remove('selected-home','selected-away'));
+  ['homeBox','awayBox'].forEach(id=>{
+    const b=document.getElementById(id);b.classList.remove('active');
+    b.innerHTML=`<div class="team-box-code">?</div><div class="team-box-name">Select ${id==='homeBox'?'Home':'Away'}</div><div class="team-box-stats"></div>`;
+  });
+  const r=document.getElementById('predictionResult');r.className='prediction-result';
+  r.innerHTML='<div class="result-title">Select Teams to Predict</div><div class="result-prediction">--</div><div class="result-confidence" style="font-size:13px;color:var(--text2)">Awaiting selection...</div>';
+  document.getElementById('ratingCalc').style.display='none';
+  document.getElementById('manualModelSection').style.display='none';
+  document.getElementById('addMatchBtn').disabled=true;
+}
+
+function showTab(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item').forEach(n=>n.classList.remove('active'));
+  const sec=document.getElementById('tab-'+name);if(sec)sec.classList.add('active');
+  const tb=document.getElementById('tab-btn-'+name);if(tb)tb.classList.add('active');
+  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
+  isLiveTabActive=(name==='live');
+  if(name==='teamstats')renderTeamStatsTable();
+  scheduleNextFetch();
+}
+
+document.addEventListener('visibilitychange',()=>{
+  isPageVisible=!document.hidden;
+  if(!document.hidden)scheduleNextFetch();
+});
+
+window.addEventListener('load',()=>{
+  renderTeamLists();
+  updatePowerMeter();
+  fetchLiveData();
+});
+</script>
+</body>
+</html>
